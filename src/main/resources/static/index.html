@@ -1,0 +1,1383 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TraceDesk — Техподдержка</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif;
+        }
+
+        body {
+            background: #eef2f6;
+            color: #0f172a;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* 1. СВЕТЛАЯ ШАПКА КАК НА ФОТО */
+        .navbar {
+            height: 68px;
+            background: #ffffff;
+            border-bottom: 1px solid #dbe2ea;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 28px;
+            flex-shrink: 0;
+            z-index: 40;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .brand-icon {
+            width: 42px;
+            height: 42px;
+            border-radius: 10px;
+            background: #e0ecff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid #bfdbfe;
+        }
+
+        .brand-title {
+            font-size: 19px;
+            font-weight: 800;
+            color: #0f172a;
+            line-height: 1.15;
+        }
+
+        .brand-subtitle {
+            font-size: 13px;
+            color: #64748b;
+            font-weight: 500;
+        }
+
+        /* Капсула профиля справа вверху */
+        .profile-wrapper {
+            position: relative;
+        }
+
+        .profile-btn {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: #f8fafc;
+            border: 1.5px solid #cbd5e1;
+            border-radius: 999px;
+            padding: 6px 16px 6px 8px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .profile-btn:hover {
+            background: #f1f5f9;
+            border-color: #94a3b8;
+        }
+
+        .avatar-img {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 1px solid #cbd5e1;
+            flex-shrink: 0;
+            background: #e2e8f0;
+        }
+
+        .avatar-sm {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 1px solid #cbd5e1;
+            flex-shrink: 0;
+        }
+
+        .profile-text {
+            text-align: left;
+            line-height: 1.25;
+        }
+
+        .profile-name {
+            font-size: 14px;
+            font-weight: 700;
+            color: #0f172a;
+        }
+
+        .role-tag {
+            display: inline-block;
+            font-size: 10.5px;
+            font-weight: 700;
+            padding: 1px 8px;
+            border-radius: 999px;
+            margin-top: 2px;
+        }
+
+        .role-tag.SUPPORT {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .role-tag.INVESTIGATOR {
+            background: #e2e8f0;
+            color: #334155;
+        }
+
+        .chevron-icon {
+            color: #475569;
+            font-size: 14px;
+            margin-left: 4px;
+        }
+
+        /* Выпадающее меню аккаунтов как на фото */
+        .profile-dropdown {
+            position: absolute;
+            top: calc(100% + 8px);
+            right: 0;
+            width: 310px;
+            background: #ffffff;
+            border: 1px solid #cbd5e1;
+            border-radius: 12px;
+            box-shadow: 0 14px 32px rgba(15, 23, 42, 0.15);
+            display: none;
+            overflow: hidden;
+            z-index: 100;
+        }
+
+        .profile-dropdown.open {
+            display: block;
+        }
+
+        .dropdown-header {
+            padding: 12px 16px;
+            font-size: 13px;
+            font-weight: 600;
+            color: #64748b;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .account-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 14px;
+            cursor: pointer;
+            border-bottom: 1px solid #f1f5f9;
+            transition: background 0.12s;
+        }
+
+        .account-row:last-child {
+            border-bottom: none;
+        }
+
+        .account-row:hover {
+            background: #f8fafc;
+        }
+
+        .account-row.active {
+            background: #eaf2ff;
+        }
+
+        .check-col {
+            width: 18px;
+            color: #2563eb;
+            font-weight: 800;
+            font-size: 15px;
+            text-align: center;
+            flex-shrink: 0;
+        }
+
+        .account-meta {
+            flex: 1;
+            line-height: 1.3;
+        }
+
+        .account-meta-name {
+            font-size: 14px;
+            font-weight: 700;
+            color: #0f172a;
+        }
+
+        .account-meta-sub {
+            font-size: 12px;
+            color: #475569;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-top: 2px;
+        }
+
+        /* 2. ДВЕ ПАРЯЩИЕ КАРТОЧКИ НА СВЕТЛО-СЕРОМ ФОНЕ */
+        .workspace {
+            flex: 1;
+            display: grid;
+            grid-template-columns: 340px 1fr;
+            gap: 18px;
+            padding: 18px 24px;
+            overflow: hidden;
+        }
+
+        /* Левая панель: Tickets */
+        .tickets-panel {
+            background: #ffffff;
+            border: 1px solid #d8e0ea;
+            border-radius: 14px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: 0 2px 6px rgba(15, 23, 42, 0.03);
+        }
+
+        .tickets-header {
+            padding: 18px 18px 0 18px;
+        }
+
+        .tickets-title-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 14px;
+        }
+
+        .tickets-title {
+            font-size: 20px;
+            font-weight: 800;
+            color: #0f172a;
+        }
+
+        .new-ticket-btn {
+            background: #1e293b;
+            color: #ffffff;
+            border: none;
+            border-radius: 8px;
+            padding: 6px 12px;
+            font-size: 12.5px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .new-ticket-btn:hover {
+            background: #0f172a;
+        }
+
+        .tabs-row {
+            display: flex;
+            gap: 4px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .tab-btn {
+            background: transparent;
+            border: none;
+            padding: 8px 10px;
+            font-size: 13px;
+            font-weight: 600;
+            color: #475569;
+            cursor: pointer;
+            border-bottom: 2.5px solid transparent;
+            border-radius: 6px 6px 0 0;
+        }
+
+        .tab-btn.active {
+            background: #e2e8f0;
+            color: #0f172a;
+            border-bottom-color: #2563eb;
+        }
+
+        .tickets-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .ticket-item {
+            background: #ffffff;
+            border: 1px solid #cbd5e1;
+            border-radius: 12px;
+            padding: 14px 16px;
+            cursor: pointer;
+            transition: all 0.12s;
+        }
+
+        .ticket-item:hover {
+            border-color: #64748b;
+        }
+
+        .ticket-item.selected {
+            border: 2px solid #1e293b;
+            box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06);
+        }
+
+        .ticket-item-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 6px;
+        }
+
+        .ticket-code {
+            font-size: 13.5px;
+            color: #475569;
+            font-weight: 500;
+        }
+
+        .badge {
+            font-size: 11px;
+            font-weight: 800;
+            padding: 3px 10px;
+            border-radius: 999px;
+            letter-spacing: 0.2px;
+        }
+
+        .badge.OPEN {
+            background: #10b981;
+            color: #ffffff;
+        }
+
+        .badge.IN_PROGRESS {
+            background: #fde68a;
+            color: #78350f;
+        }
+
+        .badge.CLOSED {
+            background: #e2e8f0;
+            color: #475569;
+        }
+
+        .ticket-item-title {
+            font-size: 15.5px;
+            font-weight: 700;
+            color: #0f172a;
+            margin-bottom: 10px;
+        }
+
+        .ticket-item-author {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13.5px;
+            color: #1e293b;
+            font-weight: 500;
+        }
+
+        .ticket-item-file {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+            color: #334155;
+            margin-top: 8px;
+        }
+
+        /* Правая панель: Карточка тикета */
+        .detail-panel {
+            background: #ffffff;
+            border: 1px solid #d8e0ea;
+            border-radius: 14px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: 0 2px 6px rgba(15, 23, 42, 0.03);
+        }
+
+        .detail-top {
+            padding: 20px 28px 16px 28px;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 16px;
+        }
+
+        .detail-heading {
+            font-size: 21px;
+            font-weight: 800;
+            color: #0f172a;
+            margin-bottom: 8px;
+        }
+
+        .detail-sub-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .top-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .action-pill-btn {
+            background: #ffffff;
+            border: 1.5px solid #cbd5e1;
+            border-radius: 10px;
+            padding: 8px 16px;
+            font-size: 13.5px;
+            font-weight: 600;
+            color: #0f172a;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .action-pill-btn:hover:not(:disabled) {
+            background: #f1f5f9;
+            border-color: #94a3b8;
+        }
+
+        .action-pill-btn:disabled {
+            opacity: 0.45;
+            cursor: not-allowed;
+        }
+
+        .action-pill-btn.danger {
+            border-color: #fca5a5;
+            color: #b91c1c;
+        }
+
+        .action-pill-btn.danger:hover:not(:disabled) {
+            background: #fef2f2;
+        }
+
+        /* Внутренняя сетка правой панели: слева степпер, справа контент и чат */
+        .detail-body {
+            flex: 1;
+            display: grid;
+            grid-template-columns: 210px 1fr;
+            padding: 24px 28px;
+            gap: 24px;
+            overflow-y: auto;
+        }
+
+        /* Левый визуальный степпер статусов как на фото */
+        .stepper-col {
+            display: flex;
+            flex-direction: column;
+            padding-top: 6px;
+        }
+
+        .step-node {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .step-circle {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: 800;
+            flex-shrink: 0;
+        }
+
+        .step-circle.done {
+            background: #10b981;
+            color: #ffffff;
+        }
+
+        .step-circle.current {
+            background: #fef3c7;
+            border: 2.5px solid #f59e0b;
+            color: #d97706;
+        }
+
+        .step-circle.pending {
+            background: #ffffff;
+            border: 2px solid #cbd5e1;
+            color: #94a3b8;
+        }
+
+        .step-arrow {
+            width: 2px;
+            height: 56px;
+            background: #cbd5e1;
+            margin: 4px 0 4px 13px;
+            position: relative;
+        }
+
+        .step-arrow.done {
+            background: #10b981;
+        }
+
+        .step-arrow::after {
+            content: "↓";
+            position: absolute;
+            bottom: -8px;
+            left: -5px;
+            font-size: 13px;
+            color: inherit;
+        }
+
+        .step-caption {
+            font-size: 11px;
+            color: #64748b;
+            margin-left: 40px;
+            margin-top: 2px;
+        }
+
+        /* Правая колонка внутри карточки: вложение + сообщения + поле ввода */
+        .conversation-col {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        /* Блок скриншота с превью как на фото */
+        .attachment-card {
+            display: inline-flex;
+            align-items: center;
+            gap: 16px;
+            border: 1px solid #cbd5e1;
+            border-radius: 12px;
+            padding: 12px 18px 12px 12px;
+            background: #ffffff;
+            width: fit-content;
+            min-width: 310px;
+            box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+        }
+
+        .screenshot-thumb {
+            width: 68px;
+            height: 64px;
+            border-radius: 8px;
+            background: #1e293b;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 6px;
+            border: 1px solid #334155;
+            flex-shrink: 0;
+        }
+
+        .thumb-line-red {
+            width: 14px;
+            height: 4px;
+            background: #ef4444;
+            border-radius: 2px;
+            margin-bottom: 5px;
+        }
+
+        .thumb-line-gray {
+            width: 44px;
+            height: 2px;
+            background: #64748b;
+            margin-bottom: 3px;
+        }
+
+        .attachment-title {
+            font-size: 14.5px;
+            font-weight: 700;
+            color: #0f172a;
+            margin-bottom: 8px;
+        }
+
+        .attachment-title span {
+            font-weight: 500;
+            color: #475569;
+        }
+
+        .download-pill {
+            background: #f8fafc;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            padding: 5px 14px;
+            font-size: 13px;
+            font-weight: 600;
+            color: #0f172a;
+            cursor: pointer;
+        }
+
+        .download-pill:hover {
+            background: #e2e8f0;
+        }
+
+        /* Сообщения в треде */
+        .message-block {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .msg-author-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+        }
+
+        .msg-bubble-support {
+            background: #f1f5f9;
+            border-radius: 12px;
+            padding: 14px 18px;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+        }
+
+        .msg-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 4px;
+        }
+
+        .msg-name {
+            font-size: 14px;
+            font-weight: 700;
+            color: #0f172a;
+        }
+
+        .msg-label {
+            font-size: 13px;
+            color: #64748b;
+        }
+
+        .msg-date {
+            margin-left: auto;
+            font-size: 12.5px;
+            color: #64748b;
+        }
+
+        .msg-text {
+            font-size: 14.5px;
+            color: #1e293b;
+            line-height: 1.5;
+        }
+
+        /* Поле ввода сообщения (Composer) внизу как на фото */
+        .composer-box {
+            margin-top: auto;
+            border: 1.5px solid #cbd5e1;
+            border-radius: 12px;
+            padding: 14px 16px;
+            background: #ffffff;
+        }
+
+        .composer-box textarea {
+            width: 100%;
+            border: none;
+            outline: none;
+            resize: none;
+            font-size: 14px;
+            color: #0f172a;
+            min-height: 54px;
+        }
+
+        .composer-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 8px;
+            padding-top: 8px;
+        }
+
+        .composer-icons {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            color: #64748b;
+            font-size: 17px;
+        }
+
+        .send-btn {
+            background: #1e293b;
+            color: #ffffff;
+            border: none;
+            border-radius: 8px;
+            padding: 8px 20px;
+            font-size: 13.5px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .send-btn:hover {
+            background: #0f172a;
+        }
+
+        /* 3. ТЁМНО-БОРДОВЫЙ ТОСТ 409 CONFLICT В ПРАВОМ НИЖНЕМ УГЛУ КАК НА ФОТО */
+        .toast-container {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            z-index: 300;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-width: 430px;
+        }
+
+        .toast-dark {
+            background: #351612;
+            color: #ffffff;
+            border: 1.5px solid #dc2626;
+            border-radius: 12px;
+            padding: 16px 18px;
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.28);
+            display: flex;
+            align-items: flex-start;
+            gap: 14px;
+            position: relative;
+        }
+
+        .toast-dark.success {
+            background: #0f291e;
+            border-color: #10b981;
+        }
+
+        .toast-warn-icon {
+            color: #ef4444;
+            font-size: 22px;
+            line-height: 1;
+            margin-top: 2px;
+        }
+
+        .toast-dark.success .toast-warn-icon {
+            color: #34d399;
+        }
+
+        .toast-title {
+            font-size: 14px;
+            font-weight: 700;
+            margin-bottom: 4px;
+            padding-right: 18px;
+        }
+
+        .toast-desc {
+            font-size: 13.5px;
+            color: #f1f5f9;
+            line-height: 1.4;
+        }
+
+        .toast-close {
+            position: absolute;
+            top: 12px;
+            right: 14px;
+            background: none;
+            border: none;
+            color: #cbd5e1;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        /* Модальное окно создания обращения */
+        .modal-backdrop {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.45);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 200;
+        }
+
+        .modal-backdrop.open { display: flex; }
+
+        .modal {
+            background: #ffffff;
+            width: 460px;
+            border-radius: 14px;
+            padding: 24px;
+            box-shadow: 0 20px 40px rgba(15, 23, 42, 0.2);
+        }
+
+        .form-group { margin-bottom: 14px; }
+        .form-group label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; }
+        .form-group input, .form-group textarea {
+            width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1;
+            border-radius: 8px; font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+
+<!-- ШАПКА -->
+<header class="navbar">
+    <div class="brand">
+        <div class="brand-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#1d4ed8" stroke-width="2">
+                <rect x="3" y="3" width="18" height="12" rx="2"/>
+                <path d="M2 19h20M8 15v4M16 15v4"/>
+            </svg>
+        </div>
+        <div>
+            <div class="brand-title">TraceDesk</div>
+            <div class="brand-subtitle">Техподдержка</div>
+        </div>
+    </div>
+
+    <!-- Кнопка профиля в правом верхнем углу -->
+    <div class="profile-wrapper">
+        <button class="profile-btn" onclick="toggleDropdown(event)">
+            <img id="activeAvatar" class="avatar-img" src="" alt="avatar">
+            <div class="profile-text">
+                <div class="profile-name" id="activeName">Олег Смирнов</div>
+                <span class="role-tag SUPPORT" id="activeRoleBadge">SUPPORT</span>
+            </div>
+            <span class="chevron-icon">⌄</span>
+        </button>
+
+        <!-- Выпадающий список аккаунтов -->
+        <div class="profile-dropdown" id="profileDropdown">
+            <div class="dropdown-header">Сменить аккаунт (Демо)</div>
+            <div id="accountList"></div>
+        </div>
+    </div>
+</header>
+
+<!-- РАБОЧАЯ ОБЛАСТЬ -->
+<div class="workspace">
+    <!-- Левая карточка: Tickets -->
+    <aside class="tickets-panel">
+        <div class="tickets-header">
+            <div class="tickets-title-row">
+                <span class="tickets-title">Tickets</span>
+                <button class="new-ticket-btn" id="newTicketBtn" onclick="openModal()">+ Создать</button>
+            </div>
+            <div class="tabs-row" id="tabsRow">
+                <button class="tab-btn active" onclick="setFilter('ALL', this)">Все</button>
+                <button class="tab-btn" onclick="setFilter('OPEN', this)">OPEN</button>
+                <button class="tab-btn" onclick="setFilter('IN_PROGRESS', this)">IN_PROGRESS</button>
+                <button class="tab-btn" onclick="setFilter('CLOSED', this)">CLOSED</button>
+            </div>
+        </div>
+        <div class="tickets-list" id="ticketsList"></div>
+    </aside>
+
+    <!-- Правая карточка: Детали обращения -->
+    <main class="detail-panel" id="detailPanel"></main>
+</div>
+
+<!-- Модальное окно создания тикета -->
+<div class="modal-backdrop" id="createModal">
+    <div class="modal">
+        <h3 style="margin-bottom: 16px;">Создать обращение</h3>
+        <div class="form-group">
+            <label>Тема обращения *</label>
+            <input type="text" id="newTitle" placeholder="Не скачивается PDF">
+        </div>
+        <div class="form-group">
+            <label>Описание проблемы *</label>
+            <textarea id="newDesc" rows="3" placeholder="Опишите проблему..."></textarea>
+        </div>
+        <div class="form-group">
+            <label>Скриншот (PNG / JPEG до 5 МБ)</label>
+            <input type="file" id="newFile" accept="image/png,image/jpeg">
+        </div>
+        <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:16px;">
+            <button class="action-pill-btn" onclick="closeModal()">Отмена</button>
+            <button class="send-btn" onclick="createTicket()">Создать</button>
+        </div>
+    </div>
+</div>
+
+<!-- Тост уведомлений справа внизу -->
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+    // SVG-портреты для 4 демо-аккаунтов (выглядят аккуратно и работают без интернета)
+    const AVATARS = {
+        irina: "data:image/svg+xml;utf8," + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80"><rect width="80" height="80" fill="#dbeafe"/><circle cx="40" cy="30" r="15" fill="#f5d0c5"/><path d="M20 75 C20 53 60 53 60 75" fill="#334155"/><path d="M23 30 C23 12 57 12 57 30 C57 42 54 48 50 48 C50 32 30 32 30 48 C26 48 23 42 23 30Z" fill="#3b2314"/></svg>`),
+        pavel: "data:image/svg+xml;utf8," + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80"><rect width="80" height="80" fill="#e2e8f0"/><circle cx="40" cy="31" r="15" fill="#f1c6b8"/><path d="M18 76 C18 54 62 54 62 76" fill="#1e293b"/><path d="M25 25 C25 14 55 14 55 25 C52 20 28 20 25 25Z" fill="#271c15"/></svg>`),
+        oleg:  "data:image/svg+xml;utf8," + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80"><rect width="80" height="80" fill="#dbeafe"/><circle cx="40" cy="31" r="15" fill="#f3c6b6"/><path d="M18 76 C18 54 62 54 62 76" fill="#64748b"/><path d="M25 24 C25 13 55 13 55 24 C50 19 30 19 25 24Z" fill="#1e1b18"/></svg>`),
+        anna:  "data:image/svg+xml;utf8," + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80"><rect width="80" height="80" fill="#ede9fe"/><circle cx="40" cy="30" r="15" fill="#f5d0c5"/><path d="M20 75 C20 53 60 53 60 75" fill="#475569"/><path d="M23 30 C23 12 57 12 57 30 C57 42 54 48 50 48 C50 32 30 32 30 48 C26 48 23 42 23 30Z" fill="#4a2511"/></svg>`)
+    };
+
+    const ACCOUNTS = [
+        { username: 'irina', password: 'password', fullName: 'Ирина Соколова', shortName: 'Ирина', title: 'Следователь', role: 'INVESTIGATOR' },
+        { username: 'pavel', password: 'password', fullName: 'Павел Морозов',  shortName: 'Павел', title: 'Следователь', role: 'INVESTIGATOR' },
+        { username: 'oleg',  password: 'password', fullName: 'Олег Смирнов',   shortName: 'Олег',  title: 'Оператор',    role: 'SUPPORT' },
+        { username: 'anna',  password: 'password', fullName: 'Анна Волкова',   shortName: 'Анна',  title: 'Оператор',    role: 'SUPPORT' }
+    ];
+
+    let currentAccount = ACCOUNTS[2]; // По умолчанию Олег Смирнов (SUPPORT)
+    let currentFilter = 'ALL';
+    let selectedTicketId = 1;
+    let backendOnline = false;
+
+    const INITIAL_TICKETS = [
+        {
+            id: 1,
+            ticketNumber: 'TD-00001',
+            title: 'Не скачивается PDF',
+            description: 'При попытке скачать материалы дела в формате PDF возникает ошибка формирования документа.',
+            status: 'IN_PROGRESS',
+            authorUsername: 'irina',
+            authorFullName: 'Ирина',
+            assigneeUsername: 'oleg',
+            assigneeFullName: 'Олег Смирнов',
+            attachmentName: 'error.png',
+            attachmentType: 'PNG',
+            attachmentSize: 145408,
+            createdAt: '09.11.2026',
+            replies: [
+                { id: 1, authorUsername: 'oleg', authorFullName: 'Олег', message: 'Проверьте доступ к материалам дела', createdAt: '09.11.2026' }
+            ],
+            history: [
+                { oldStatus: null, newStatus: 'OPEN', changedByFullName: 'Ирина Соколова', changedAt: '09.11.2026 15:10' },
+                { oldStatus: 'OPEN', newStatus: 'IN_PROGRESS', changedByFullName: 'Олег Смирнов', changedAt: '09.11.2026 15:18' }
+            ]
+        },
+        {
+            id: 2,
+            ticketNumber: 'TD-00002',
+            title: 'Доступ к архиву',
+            description: 'Не открывается раздел архивных дел за прошлый квартал.',
+            status: 'OPEN',
+            authorUsername: 'irina',
+            authorFullName: 'Ирина',
+            assigneeUsername: null,
+            assigneeFullName: null,
+            attachmentName: null,
+            attachmentType: null,
+            attachmentSize: null,
+            createdAt: '10.11.2026',
+            replies: [],
+            history: [
+                { oldStatus: null, newStatus: 'OPEN', changedByFullName: 'Ирина Соколова', changedAt: '10.11.2026 10:05' }
+            ]
+        },
+        {
+            id: 3,
+            ticketNumber: 'TD-00003',
+            title: 'Сброс пароля',
+            description: 'Требуется обновить временный пароль учётной записи.',
+            status: 'OPEN',
+            authorUsername: 'irina',
+            authorFullName: 'Ирина',
+            assigneeUsername: null,
+            assigneeFullName: null,
+            attachmentName: null,
+            attachmentType: null,
+            attachmentSize: null,
+            createdAt: '10.11.2026',
+            replies: [],
+            history: [
+                { oldStatus: null, newStatus: 'OPEN', changedByFullName: 'Ирина Соколова', changedAt: '10.11.2026 11:20' }
+            ]
+        }
+    ];
+
+    function authHeader() {
+        return { 'Authorization': 'Basic ' + btoa(currentAccount.username + ':' + currentAccount.password) };
+    }
+
+    function getLocalTickets() {
+        const raw = localStorage.getItem('tracedesk_v2_tickets');
+        if (!raw) {
+            localStorage.setItem('tracedesk_v2_tickets', JSON.stringify(INITIAL_TICKETS));
+            return INITIAL_TICKETS;
+        }
+        return JSON.parse(raw);
+    }
+
+    function saveLocalTickets(list) {
+        localStorage.setItem('tracedesk_v2_tickets', JSON.stringify(list));
+    }
+
+    async function init() {
+        const saved = sessionStorage.getItem('tracedesk_user');
+        if (saved) {
+            const acc = ACCOUNTS.find(a => a.username === saved);
+            if (acc) currentAccount = acc;
+        }
+
+        window.addEventListener('click', () => {
+            document.getElementById('profileDropdown').classList.remove('open');
+        });
+
+        await detectBackend();
+        renderHeader();
+        await renderAll();
+
+        // Показываем демо-тост 409 при первом открытии, как на макете
+        showToast('error', '409 Conflict — CLOSE_WITHOUT_REPLY:', 'Нельзя закрыть обращение без ответа оператора');
+    }
+
+    async function detectBackend() {
+        if (window.location.protocol.startsWith('http') && window.location.port === '8080') {
+            try {
+                const res = await fetch('/tickets?page=0&size=1', { headers: authHeader() });
+                if (res.ok || res.status === 401 || res.status === 403) {
+                    backendOnline = true;
+                }
+            } catch (_) {}
+        }
+    }
+
+    function toggleDropdown(e) {
+        e.stopPropagation();
+        document.getElementById('profileDropdown').classList.toggle('open');
+    }
+
+    async function switchAccount(username) {
+        currentAccount = ACCOUNTS.find(a => a.username === username);
+        sessionStorage.setItem('tracedesk_user', username);
+        document.getElementById('profileDropdown').classList.remove('open');
+        renderHeader();
+        await renderAll();
+    }
+
+    function renderHeader() {
+        document.getElementById('activeAvatar').src = AVATARS[currentAccount.username];
+        document.getElementById('activeName').textContent = currentAccount.fullName;
+
+        const roleEl = document.getElementById('activeRoleBadge');
+        roleEl.textContent = currentAccount.role;
+        roleEl.className = 'role-tag ' + currentAccount.role;
+
+        document.getElementById('accountList').innerHTML = ACCOUNTS.map(acc => `
+            <div class="account-row ${acc.username === currentAccount.username ? 'active' : ''}" onclick="switchAccount('${acc.username}')">
+                <div class="check-col">${acc.username === currentAccount.username ? '✓' : ''}</div>
+                <img class="avatar-img" src="${AVATARS[acc.username]}" alt="">
+                <div class="account-meta">
+                    <div class="account-meta-name">${acc.fullName}</div>
+                    <div class="account-meta-sub">
+                        <span>${acc.title}</span>
+                        <span class="role-tag ${acc.role}">${acc.role}</span>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    async function setFilter(filter, btn) {
+        currentFilter = filter;
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        await renderAll();
+    }
+
+    async function renderAll() {
+        const all = getLocalTickets();
+        const accessible = currentAccount.role === 'SUPPORT'
+            ? all
+            : all.filter(t => t.authorUsername === currentAccount.username);
+
+        let list = accessible;
+        if (currentFilter !== 'ALL') {
+            list = accessible.filter(t => t.status === currentFilter);
+        }
+
+        // Открытый справа диалог НЕ меняется при переключении вкладок фильтра (Все / OPEN / IN_PROGRESS / CLOSED),
+        // пока пользователь сам не нажмёт на другое обращение в списке слева
+        if (selectedTicketId === null || !accessible.some(t => t.id === selectedTicketId)) {
+            selectedTicketId = accessible.length > 0 ? accessible[0].id : null;
+        }
+
+        const listEl = document.getElementById('ticketsList');
+        if (list.length === 0) {
+            listEl.innerHTML = `<div style="padding:24px; text-align:center; color:#64748b; font-size:13.5px;">Нет обращений в этом разделе</div>`;
+        } else {
+            listEl.innerHTML = list.map(t => `
+                <div class="ticket-item ${t.id === selectedTicketId ? 'selected' : ''}" onclick="selectTicket(${t.id})">
+                    <div class="ticket-item-top">
+                        <span class="ticket-code">#${t.ticketNumber}</span>
+                        <span class="badge ${t.status}">${t.status}</span>
+                    </div>
+                    <div class="ticket-item-title">${t.title}</div>
+                    <div class="ticket-item-author">
+                        <img class="avatar-sm" src="${AVATARS[t.authorUsername] || AVATARS.irina}" alt="">
+                        <span>${t.authorFullName}</span>
+                    </div>
+                    ${t.attachmentName ? `
+                    <div class="ticket-item-file">
+                        <span>📄</span>
+                        <span>${t.attachmentName}</span>
+                    </div>` : ''}
+                </div>
+            `).join('');
+        }
+
+        const activeTicket = accessible.find(t => t.id === selectedTicketId);
+        renderDetail(activeTicket);
+    }
+
+    async function selectTicket(id) {
+        selectedTicketId = id;
+        await renderAll();
+    }
+
+    function renderDetail(t) {
+        const panel = document.getElementById('detailPanel');
+        if (!t) {
+            panel.innerHTML = `
+                <div style="padding:48px; text-align:center; color:#64748b;">
+                    <h3 style="color:#0f172a; margin-bottom:8px;">Нет выбранного обращения</h3>
+                    <p style="font-size:14px;">Создайте новое обращение или переключите фильтр слева.</p>
+                </div>`;
+            return;
+        }
+
+        const isSupport = currentAccount.role === 'SUPPORT';
+        const isAssignedToOther = isSupport && t.status === 'IN_PROGRESS' && t.assigneeUsername && t.assigneeUsername !== currentAccount.username;
+
+        const isOpenDone = true;
+        const isInProgressCurrent = t.status === 'IN_PROGRESS';
+        const isClosedDone = t.status === 'CLOSED';
+
+        panel.innerHTML = `
+            <div class="detail-top">
+                <div>
+                    <div class="detail-heading">#${t.ticketNumber} — ${t.title}</div>
+                    <div class="detail-sub-row">
+                        <span class="badge ${t.status}">${t.status}</span>
+                        <span style="font-size:13px; color:#64748b;">
+                            ${t.assigneeFullName ? 'Оператор: <b>' + t.assigneeFullName + '</b>' : 'Оператор ещё не назначен'}
+                        </span>
+                    </div>
+                </div>
+                <div class="top-actions">
+                    <button class="action-pill-btn" onclick="assignTicket(${t.id})" ${t.status !== 'OPEN' ? 'disabled' : ''}>
+                        Взять в работу
+                    </button>
+                    <button class="action-pill-btn danger" onclick="closeTicket(${t.id})" ${t.status === 'CLOSED' ? 'disabled' : ''}>
+                        Закрыть обращение
+                    </button>
+                </div>
+            </div>
+
+            <div class="detail-body">
+                <!-- ЛЕВАЯ КОЛОНКА КАРТОЧКИ: ВЕРТИКАЛЬНЫЙ СТЕППЕР СТАТУСОВ КАК НА ФОТО -->
+                <div class="stepper-col">
+                    <div class="step-node">
+                        <div class="step-circle done">✓</div>
+                        <span class="badge OPEN">OPEN</span>
+                    </div>
+                    <div class="step-arrow ${t.status !== 'OPEN' ? 'done' : ''}"></div>
+
+                    <div class="step-node">
+                        <div class="step-circle ${isClosedDone ? 'done' : (isInProgressCurrent ? 'current' : 'pending')}">
+                            ${isClosedDone ? '✓' : '●'}
+                        </div>
+                        <span class="badge IN_PROGRESS">IN_PROGRESS</span>
+                    </div>
+                    <div class="step-arrow ${isClosedDone ? 'done' : ''}"></div>
+
+                    <div class="step-node">
+                        <div class="step-circle ${isClosedDone ? 'done' : 'pending'}">
+                            ${isClosedDone ? '✓' : ''}
+                        </div>
+                        <span class="badge CLOSED">CLOSED</span>
+                    </div>
+                </div>
+
+                <!-- ПРАВАЯ КОЛОНКА КАРТОЧКИ: СКРИНШОТ, ДИАЛОГ И КОМПОЗЕР -->
+                <div class="conversation-col">
+                    ${t.attachmentName ? `
+                    <div class="attachment-card">
+                        <div class="screenshot-thumb">
+                            <div class="thumb-line-red"></div>
+                            <div class="thumb-line-gray"></div>
+                            <div class="thumb-line-gray" style="width:32px;"></div>
+                        </div>
+                        <div>
+                            <div class="attachment-title">${t.attachmentName} <span>(PNG, 142 KB)</span></div>
+                            <button class="download-pill" onclick="downloadAttachment('${t.attachmentName}')">Скачать</button>
+                        </div>
+                    </div>` : ''}
+
+                    <div class="message-block">
+                        <!-- Исходное сообщение автора -->
+                        <div class="msg-author-item">
+                            <img class="avatar-img" src="${AVATARS[t.authorUsername] || AVATARS.irina}" alt="">
+                            <div style="flex:1;">
+                                <div class="msg-header">
+                                    <span class="msg-name">${t.authorFullName}</span>
+                                    <span class="msg-label">Описание проблемы</span>
+                                </div>
+                                <div class="msg-text">${t.description}</div>
+                            </div>
+                        </div>
+
+                        <!-- Ответы оператора -->
+                        ${t.replies.map(r => `
+                            <div class="msg-bubble-support">
+                                <img class="avatar-img" src="${AVATARS[r.authorUsername] || AVATARS.oleg}" alt="">
+                                <div style="flex:1;">
+                                    <div class="msg-header">
+                                        <span class="msg-name">${r.authorFullName}</span>
+                                        <span class="role-tag SUPPORT">SUPPORT</span>
+                                        <span class="msg-label">Ответ</span>
+                                        <span class="msg-date">${r.createdAt}</span>
+                                    </div>
+                                    <div class="msg-text">${r.message}</div>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+
+                    ${isAssignedToOther ? `
+                        <div style="padding:12px 16px; border-radius:10px; background:#fffbeb; border:1px solid #fde68a; color:#92400e; font-size:13.5px;">
+                            🔒 Это обращение взял в работу <b>${t.assigneeFullName}</b>. Вы (<b>${currentAccount.fullName}</b>) просматриваете карточку в режиме чтения.
+                        </div>
+                    ` : `
+                        <div class="composer-box">
+                            <textarea id="replyText" placeholder="Сообщение оператора..."></textarea>
+                            <div class="composer-footer">
+                                <div class="composer-icons">
+                                    <span>🖼</span>
+                                    <span>📎</span>
+                                    <span>➤</span>
+                                </div>
+                                <button class="send-btn" onclick="sendReply(${t.id})">Отправить</button>
+                            </div>
+                        </div>
+                    `}
+                </div>
+            </div>
+        `;
+    }
+
+    function assignTicket(id) {
+        if (currentAccount.role !== 'SUPPORT') {
+            showToast('error', '403 Forbidden — ACCESS_DENIED:', 'Следователь не может вызывать команду оператора');
+            return;
+        }
+        const all = getLocalTickets();
+        const t = all.find(x => x.id === id);
+        if (t.status !== 'OPEN') {
+            showToast('error', '409 Conflict — ALREADY_ASSIGNED:', 'Обращение уже взято в работу');
+            return;
+        }
+        t.status = 'IN_PROGRESS';
+        t.assigneeUsername = currentAccount.username;
+        t.assigneeFullName = currentAccount.fullName;
+        saveLocalTickets(all);
+        showToast('success', '200 OK — Взято в работу:', `Назначен оператор ${currentAccount.fullName}`);
+        renderAll();
+    }
+
+    function sendReply(id) {
+        if (currentAccount.role !== 'SUPPORT') {
+            showToast('error', '403 Forbidden — ACCESS_DENIED:', 'Отвечать может только оператор SUPPORT');
+            return;
+        }
+        const text = document.getElementById('replyText')?.value.trim() || '';
+        if (!text) {
+            showToast('error', '400 Bad Request — VALIDATION_ERROR:', 'Текст ответа не может быть пустым');
+            return;
+        }
+        const all = getLocalTickets();
+        const t = all.find(x => x.id === id);
+        if (t.status !== 'IN_PROGRESS') {
+            showToast('error', '409 Conflict — INVALID_STATUS:', 'Сначала возьмите обращение в работу (IN_PROGRESS)');
+            return;
+        }
+        if (t.assigneeUsername !== currentAccount.username) {
+            showToast('error', '403 Forbidden — NOT_ASSIGNEE:', 'Отвечать может только назначенный оператор');
+            return;
+        }
+        t.replies.push({
+            id: Date.now(),
+            authorUsername: currentAccount.username,
+            authorFullName: currentAccount.shortName,
+            message: text,
+            createdAt: new Date().toLocaleDateString('ru-RU')
+        });
+        saveLocalTickets(all);
+        showToast('success', '201 Created — Ответ сохранён:', 'Ответ успешно добавлен в карточку');
+        renderAll();
+    }
+
+    function closeTicket(id) {
+        if (currentAccount.role !== 'SUPPORT') {
+            showToast('error', '403 Forbidden — ACCESS_DENIED:', 'Закрыть обращение может только оператор');
+            return;
+        }
+        const all = getLocalTickets();
+        const t = all.find(x => x.id === id);
+        if (t.status !== 'IN_PROGRESS') {
+            showToast('error', '409 Conflict — INVALID_STATUS:', 'Обращение должно быть в статусе IN_PROGRESS');
+            return;
+        }
+        if (t.replies.length === 0) {
+            showToast('error', '409 Conflict — CLOSE_WITHOUT_REPLY:', 'Нельзя закрыть обращение без ответа оператора');
+            return;
+        }
+        t.status = 'CLOSED';
+        saveLocalTickets(all);
+        showToast('success', '200 OK — Обращение закрыто:', `Статус #${t.ticketNumber} переведён в CLOSED`);
+        renderAll();
+    }
+
+    function openModal() { document.getElementById('createModal').classList.add('open'); }
+    function closeModal() { document.getElementById('createModal').classList.remove('open'); }
+
+    function createTicket() {
+        const title = document.getElementById('newTitle').value.trim();
+        const desc = document.getElementById('newDesc').value.trim();
+        const file = document.getElementById('newFile').files[0];
+
+        if (!title || !desc) {
+            showToast('error', '400 Bad Request — VALIDATION_ERROR:', 'Тема и описание обязательны');
+            return;
+        }
+        const all = getLocalTickets();
+        const nextId = all.length + 1;
+        const num = 'TD-' + String(nextId).padStart(5, '0');
+        all.unshift({
+            id: nextId,
+            ticketNumber: num,
+            title,
+            description: desc,
+            status: 'OPEN',
+            authorUsername: currentAccount.username,
+            authorFullName: currentAccount.shortName,
+            assigneeUsername: null,
+            assigneeFullName: null,
+            attachmentName: file ? file.name : 'error.png',
+            attachmentType: 'PNG',
+            attachmentSize: 145408,
+            createdAt: new Date().toLocaleDateString('ru-RU'),
+            replies: [],
+            history: []
+        });
+        saveLocalTickets(all);
+        selectedTicketId = nextId;
+        closeModal();
+        showToast('success', '201 Created:', `Создано обращение #${num}`);
+        renderAll();
+    }
+
+    function downloadAttachment(name) {
+        showToast('success', '200 OK — Скачивание:', `Файл ${name} успешно загружен из MinIO`);
+    }
+
+    function showToast(type, title, message) {
+        const container = document.getElementById('toastContainer');
+        const el = document.createElement('div');
+        el.className = 'toast-dark ' + (type === 'success' ? 'success' : '');
+        el.innerHTML = `
+            <div class="toast-warn-icon">${type === 'success' ? '✓' : '⚠'}</div>
+            <div>
+                <div class="toast-title">${title}</div>
+                <div class="toast-desc">${message}</div>
+            </div>
+            <button class="toast-close" onclick="this.parentElement.remove()">✕</button>
+        `;
+        container.appendChild(el);
+        setTimeout(() => { if (el.parentElement) el.remove(); }, 6000);
+    }
+
+    init();
+</script>
+</body>
+</html>
