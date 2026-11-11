@@ -2,7 +2,6 @@ package com.tracedesk.domain.entity;
 
 import com.tracedesk.domain.enums.Role;
 import jakarta.persistence.*;
-import org.hibernate.annotations.CollectionId;
 
 @Entity
 @Table(name = "users")

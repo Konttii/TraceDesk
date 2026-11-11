@@ -10,10 +10,10 @@ public class MinioConfig {
 
     @Bean
     public MinioClient minioClient(
-            @Value("$minio.endpoint") String endpoint,
-            @Value("$minio.access-key") String accessKey,
-            @Value("$minio.secret-ley") String secretKey
-    ){
+            @Value("${minio.endpoint}") String endpoint,
+            @Value("${minio.access-key}") String accessKey,
+            @Value("${minio.secret-key}") String secretKey
+    ) {
         return MinioClient.builder()
                 .endpoint(endpoint)
                 .credentials(accessKey, secretKey)

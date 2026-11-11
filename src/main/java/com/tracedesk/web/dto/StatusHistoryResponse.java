@@ -1,6 +1,5 @@
 package com.tracedesk.web.dto;
 
-import com.tracedesk.domain.entity.Ticket;
 import com.tracedesk.domain.enums.TicketStatus;
 import java.time.OffsetDateTime;
 

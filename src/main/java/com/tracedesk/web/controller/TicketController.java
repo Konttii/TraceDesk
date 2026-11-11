@@ -35,13 +35,15 @@ public class TicketController {
             @AuthenticationPrincipal AppUserPrincipal principal,
             @RequestParam(value = "title", required = false) String title,
             @RequestParam(value = "description", required = false) String description,
-            @RequestPart(value = "file", required = false) MultipartFile file
+            @RequestPart(value = "file", required = false) MultipartFile file,
+            @RequestPart(value = "attachment", required = false) MultipartFile attachment
     ) {
+        MultipartFile resolvedFile = (file != null && !file.isEmpty()) ? file : attachment;
         TicketCreatedResponse created = ticketService.createTicket(
                 principal.getUser(),
                 title,
                 description,
-                file
+                resolvedFile
         );
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
@@ -53,7 +55,9 @@ public class TicketController {
             @RequestParam(value = "page", defaultValue = "0") int page,
             @RequestParam(value = "size", defaultValue = "10") int size
     ) {
-        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+        int safePage = Math.max(page, 0);
+        int safeSize = Math.min(Math.max(size, 1), 100);
+        Pageable pageable = PageRequest.of(safePage, safeSize, Sort.by(Sort.Direction.DESC, "createdAt"));
         return ResponseEntity.ok(ticketService.listTickets(principal.getUser(), status, pageable));
     }
 

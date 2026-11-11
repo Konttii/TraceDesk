@@ -67,6 +67,9 @@ public class Ticket {
         if (this.updatedAt == null) {
             this.updatedAt = now;
         }
+        if (this.version == null) {
+            this.version = 0L;
+        }
     }
 
     @PreUpdate

@@ -13,7 +13,7 @@ public record TicketSummaryResponse(
         String authorFullName,
         String assigneeUsername,
         String assigneeFullName,
-        boolean hashAttachment,
+        boolean hasAttachment,
         OffsetDateTime createdAt,
         OffsetDateTime updatedAt
 ) {

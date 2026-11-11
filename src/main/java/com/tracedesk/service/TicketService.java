@@ -269,8 +269,8 @@ public class TicketService {
                         h.getId(),
                         h.getOldStatus(),
                         h.getNewStatus(),
-                        h.getChangeBy().getUsername(),
-                        h.getChangeBy().getFullName(),
+                        h.getChangedBy().getUsername(),
+                        h.getChangedBy().getFullName(),
                         h.getChangedAt()
                 ))
                 .toList();

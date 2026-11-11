@@ -19,57 +19,57 @@ public class TicketStatusHistory {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "old_status", length = 20)
-    private TicketStatus olsStatus;
+    private TicketStatus oldStatus;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "new_status",nullable = false,length = 20)
+    @Column(name = "new_status", nullable = false, length = 20)
     private TicketStatus newStatus;
 
-    @ManyToOne(fetch = FetchType.LAZY,optional = false)
-    @JoinColumn(name = "changed_by_id")
-    private User changeBy;
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "changed_by_id", nullable = false)
+    private User changedBy;
 
-    @Column(name = "changed_at",nullable = false,updatable = false)
+    @Column(name = "changed_at", nullable = false, updatable = false)
     private OffsetDateTime changedAt;
 
-    public TicketStatusHistory(){
+    public TicketStatusHistory() {
     }
 
-    public TicketStatusHistory(Ticket ticket, TicketStatus oldStatus, TicketStatus newStatus, User changeBy){
+    public TicketStatusHistory(Ticket ticket, TicketStatus oldStatus, TicketStatus newStatus, User changedBy) {
         this.ticket = ticket;
-        this.olsStatus = oldStatus;
+        this.oldStatus = oldStatus;
         this.newStatus = newStatus;
-        this.changeBy = changeBy;
+        this.changedBy = changedBy;
     }
 
     @PrePersist
-    public void prePersist(){
-        if (this.changedAt == null){
+    public void prePersist() {
+        if (this.changedAt == null) {
             changedAt = OffsetDateTime.now();
         }
     }
 
-    public Long getId(){
+    public Long getId() {
         return id;
     }
 
-    public Ticket getTicket(){
+    public Ticket getTicket() {
         return ticket;
     }
 
-    public TicketStatus getOldStatus(){
-        return olsStatus;
+    public TicketStatus getOldStatus() {
+        return oldStatus;
     }
 
-    public TicketStatus getNewStatus(){
+    public TicketStatus getNewStatus() {
         return newStatus;
     }
 
-    public User getChangeBy(){
-        return changeBy;
+    public User getChangedBy() {
+        return changedBy;
     }
 
-    public OffsetDateTime getChangedAt(){
+    public OffsetDateTime getChangedAt() {
         return changedAt;
     }
 }

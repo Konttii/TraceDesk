@@ -1,20 +1,22 @@
 server:
-  port: 8080
+  port: ${SERVER_PORT:8080}
 
 spring:
   application:
     name: tracedesk
+  config:
+    import: optional:file:.env[.properties]
 
   datasource:
-    url: jdbc:postgresql://localhost:5432/tracedesk
-    username: tracedesk
-    password: tracedesk
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:tracedesk}
+    username: ${DB_USER:tracedesk}
+    password: ${DB_PASSWORD:tracedesk}
 
   jpa:
     open-in-view: false
     hibernate:
       ddl-auto: validate
-    show-sql: true
+    show-sql: false
 
   flyway:
     enabled: true
@@ -26,7 +28,11 @@ spring:
       max-request-size: 6MB
 
 minio:
-  endpoint: http://localhost:9000
-  access-key: minioadmin
-  secret-key: minioadmin
-  bucket: tracedesk-attachments
+  endpoint: ${MINIO_ENDPOINT:http://localhost:9000}
+  access-key: ${MINIO_ACCESS_KEY:minioadmin}
+  secret-key: ${MINIO_SECRET_KEY:minioadmin}
+  bucket: ${MINIO_BUCKET:tracedesk-attachments}
+
+app:
+  demo:
+    password: ${DEMO_PASSWORD:password}
