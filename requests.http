@@ -1,0 +1,81 @@
+### 1. Ирина создаёт обращение «Не скачивается PDF» со скриншотом error.png (201 Created)
+POST http://localhost:8080/tickets
+Authorization: Basic irina password
+Content-Type: multipart/form-data; boundary=Boundary
+
+--Boundary
+Content-Disposition: form-data; name="title"
+
+Не скачивается PDF
+--Boundary
+Content-Disposition: form-data; name="description"
+
+При нажатии на кнопку скачивания материалов дела возникает ошибка формирования документа
+--Boundary
+Content-Disposition: form-data; name="file"; filename="error.png"
+Content-Type: image/png
+
+< ./error.png
+--Boundary--
+
+### 2. Олег ищет открытые обращения с фильтром OPEN и пагинацией (200 OK)
+GET http://localhost:8080/tickets?status=OPEN&page=0&size=10
+Authorization: Basic oleg password
+
+### 3. Олег берёт обращение №1 в работу (OPEN -> IN_PROGRESS)
+POST http://localhost:8080/tickets/1/assign
+Authorization: Basic oleg password
+
+### 4. Проверка конкуренции (409 Conflict): второй оператор Анна пробует взять то же обращение №1
+POST http://localhost:8080/tickets/1/assign
+Authorization: Basic anna password
+
+### 5. Проверка запрета (409 Conflict — CLOSE_WITHOUT_REPLY): Олег пытается закрыть обращение №1 БЕЗ ответа
+POST http://localhost:8080/tickets/1/close
+Authorization: Basic oleg password
+
+### 6. Проверка прав (403 Forbidden — ACCESS_DENIED): Павел пытается открыть чужую карточку Ирины
+GET http://localhost:8080/tickets/1
+Authorization: Basic pavel password
+
+### 7. Проверка прав (403 Forbidden — ACCESS_DENIED): Павел пытается скачать чужой скриншот Ирины
+GET http://localhost:8080/tickets/1/attachment
+Authorization: Basic pavel password
+
+### 8. Проверка прав (403 Forbidden): Ирина пытается вызвать команду оператора /assign
+POST http://localhost:8080/tickets/1/assign
+Authorization: Basic irina password
+
+### 9. Олег добавляет ответ в обращение №1 (201 Created)
+POST http://localhost:8080/tickets/1/replies
+Authorization: Basic oleg password
+Content-Type: application/json
+
+{
+  "message": "Проверьте доступ к материалам дела"
+}
+
+### 10. Олег закрывает обращение №1 (IN_PROGRESS -> CLOSED, 200 OK)
+POST http://localhost:8080/tickets/1/close
+Authorization: Basic oleg password
+
+### 11. Проверка запрета (409 Conflict): попытка ответить после закрытия обращения
+POST http://localhost:8080/tickets/1/replies
+Authorization: Basic oleg password
+Content-Type: application/json
+
+{
+  "message": "Повторный ответ после закрытия"
+}
+
+### 12. Ирина открывает карточку обращения №1 и видит CLOSED, ответ и историю переходов (200 OK)
+GET http://localhost:8080/tickets/1
+Authorization: Basic irina password
+
+### 13. Ирина скачивает свой скриншот error.png из MinIO (200 OK)
+GET http://localhost:8080/tickets/1/attachment
+Authorization: Basic irina password
+
+### 14. Олег фильтрует закрытые обращения (status=CLOSED)
+GET http://localhost:8080/tickets?status=CLOSED&page=0&size=10
+Authorization: Basic oleg password

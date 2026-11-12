@@ -1012,13 +1012,24 @@
     }
 
     async function detectBackend() {
-        if (window.location.protocol.startsWith('http') && window.location.port === '8080') {
+        if (window.location.protocol.startsWith('http')) {
             try {
                 const res = await fetch('/tickets?page=0&size=1', { headers: authHeader() });
                 if (res.ok || res.status === 401 || res.status === 403) {
                     backendOnline = true;
                 }
             } catch (_) {}
+        }
+    }
+
+    function formatDate(iso) {
+        if (!iso) return '';
+        try {
+            const d = new Date(iso);
+            if (isNaN(d.getTime())) return iso;
+            return d.toLocaleString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+        } catch (_) {
+            return iso;
         }
     }
 
@@ -1066,20 +1077,48 @@
     }
 
     async function renderAll() {
-        const all = getLocalTickets();
-        const accessible = currentAccount.role === 'SUPPORT'
-            ? all
-            : all.filter(t => t.authorUsername === currentAccount.username);
+        let list = [];
+        let activeTicket = null;
 
-        let list = accessible;
-        if (currentFilter !== 'ALL') {
-            list = accessible.filter(t => t.status === currentFilter);
-        }
+        if (backendOnline) {
+            try {
+                const statusQuery = currentFilter !== 'ALL' ? `&status=${currentFilter}` : '';
+                const res = await fetch(`/tickets?page=0&size=50${statusQuery}`, { headers: authHeader() });
+                if (res.ok) {
+                    const page = await res.json();
+                    list = (page.content || []).map(t => ({
+                        ...t,
+                        attachmentName: t.hasAttachment ? 'error.png' : null
+                    }));
+                }
+                if (selectedTicketId === null && list.length > 0) {
+                    selectedTicketId = list[0].id;
+                }
+                if (selectedTicketId !== null) {
+                    const detailRes = await fetch(`/tickets/${selectedTicketId}`, { headers: authHeader() });
+                    if (detailRes.ok) {
+                        activeTicket = await detailRes.json();
+                    } else if (list.length > 0) {
+                        selectedTicketId = list[0].id;
+                        const retryRes = await fetch(`/tickets/${selectedTicketId}`, { headers: authHeader() });
+                        if (retryRes.ok) activeTicket = await retryRes.json();
+                    }
+                }
+            } catch (_) {}
+        } else {
+            const all = getLocalTickets();
+            const accessible = currentAccount.role === 'SUPPORT'
+                ? all
+                : all.filter(t => t.authorUsername === currentAccount.username);
 
-        // Открытый справа диалог НЕ меняется при переключении вкладок фильтра (Все / OPEN / IN_PROGRESS / CLOSED),
-        // пока пользователь сам не нажмёт на другое обращение в списке слева
-        if (selectedTicketId === null || !accessible.some(t => t.id === selectedTicketId)) {
-            selectedTicketId = accessible.length > 0 ? accessible[0].id : null;
+            list = currentFilter !== 'ALL'
+                ? accessible.filter(t => t.status === currentFilter)
+                : accessible;
+
+            if (selectedTicketId === null || !accessible.some(t => t.id === selectedTicketId)) {
+                selectedTicketId = accessible.length > 0 ? accessible[0].id : null;
+            }
+            activeTicket = accessible.find(t => t.id === selectedTicketId);
         }
 
         const listEl = document.getElementById('ticketsList');
@@ -1097,16 +1136,15 @@
                         <img class="avatar-sm" src="${AVATARS[t.authorUsername] || AVATARS.irina}" alt="">
                         <span>${t.authorFullName}</span>
                     </div>
-                    ${t.attachmentName ? `
+                    ${(t.attachmentName || t.hasAttachment) ? `
                     <div class="ticket-item-file">
                         <span>📄</span>
-                        <span>${t.attachmentName}</span>
+                        <span>${t.attachmentName || 'Вложение'}</span>
                     </div>` : ''}
                 </div>
             `).join('');
         }
 
-        const activeTicket = accessible.find(t => t.id === selectedTicketId);
         renderDetail(activeTicket);
     }
 
@@ -1121,7 +1159,7 @@
             panel.innerHTML = `
                 <div style="padding:48px; text-align:center; color:#64748b;">
                     <h3 style="color:#0f172a; margin-bottom:8px;">Нет выбранного обращения</h3>
-                    <p style="font-size:14px;">Создайте новое обращение или переключите фильтр слева.</p>
+                    <p style="font-size:14px;">Создайте новое обращение кнопкой «+ Создать» слева.</p>
                 </div>`;
             return;
         }
@@ -1129,9 +1167,9 @@
         const isSupport = currentAccount.role === 'SUPPORT';
         const isAssignedToOther = isSupport && t.status === 'IN_PROGRESS' && t.assigneeUsername && t.assigneeUsername !== currentAccount.username;
 
-        const isOpenDone = true;
         const isInProgressCurrent = t.status === 'IN_PROGRESS';
         const isClosedDone = t.status === 'CLOSED';
+        const sizeKb = t.attachmentSize ? Math.max(1, Math.round(t.attachmentSize / 1024)) : 142;
 
         panel.innerHTML = `
             <div class="detail-top">
@@ -1155,7 +1193,7 @@
             </div>
 
             <div class="detail-body">
-                <!-- ЛЕВАЯ КОЛОНКА КАРТОЧКИ: ВЕРТИКАЛЬНЫЙ СТЕППЕР СТАТУСОВ КАК НА ФОТО -->
+                <!-- ЛЕВАЯ КОЛОНКА КАРТОЧКИ: ВЕРТИКАЛЬНЫЙ СТЕППЕР СТАТУСОВ + ИСТОРИЯ -->
                 <div class="stepper-col">
                     <div class="step-node">
                         <div class="step-circle done">✓</div>
@@ -1177,6 +1215,18 @@
                         </div>
                         <span class="badge CLOSED">CLOSED</span>
                     </div>
+
+                    ${(t.history && t.history.length > 0) ? `
+                    <div style="margin-top:20px; padding-top:14px; border-top:1px solid #e2e8f0; font-size:11.5px; color:#475569;">
+                        <div style="font-weight:700; color:#0f172a; margin-bottom:6px;">История переходов:</div>
+                        ${t.history.map(h => `
+                            <div style="margin-bottom:6px; line-height:1.35;">
+                                <b>${h.oldStatus ? h.oldStatus + ' → ' : ''}${h.newStatus}</b><br>
+                                <span>${h.changedByFullName || h.changedByUsername}</span><br>
+                                <span style="color:#94a3b8;">${formatDate(h.changedAt)}</span>
+                            </div>
+                        `).join('')}
+                    </div>` : ''}
                 </div>
 
                 <!-- ПРАВАЯ КОЛОНКА КАРТОЧКИ: СКРИНШОТ, ДИАЛОГ И КОМПОЗЕР -->
@@ -1189,8 +1239,8 @@
                             <div class="thumb-line-gray" style="width:32px;"></div>
                         </div>
                         <div>
-                            <div class="attachment-title">${t.attachmentName} <span>(PNG, 142 KB)</span></div>
-                            <button class="download-pill" onclick="downloadAttachment('${t.attachmentName}')">Скачать</button>
+                            <div class="attachment-title">${t.attachmentName} <span>(${t.attachmentType || 'PNG'}, ${sizeKb} KB)</span></div>
+                            <button class="download-pill" onclick="downloadAttachment(${t.id}, '${t.attachmentName}')">Скачать</button>
                         </div>
                     </div>` : ''}
 
@@ -1202,13 +1252,14 @@
                                 <div class="msg-header">
                                     <span class="msg-name">${t.authorFullName}</span>
                                     <span class="msg-label">Описание проблемы</span>
+                                    <span class="msg-date">${formatDate(t.createdAt)}</span>
                                 </div>
                                 <div class="msg-text">${t.description}</div>
                             </div>
                         </div>
 
                         <!-- Ответы оператора -->
-                        ${t.replies.map(r => `
+                        ${(t.replies || []).map(r => `
                             <div class="msg-bubble-support">
                                 <img class="avatar-img" src="${AVATARS[r.authorUsername] || AVATARS.oleg}" alt="">
                                 <div style="flex:1;">
@@ -1216,7 +1267,7 @@
                                         <span class="msg-name">${r.authorFullName}</span>
                                         <span class="role-tag SUPPORT">SUPPORT</span>
                                         <span class="msg-label">Ответ</span>
-                                        <span class="msg-date">${r.createdAt}</span>
+                                        <span class="msg-date">${formatDate(r.createdAt)}</span>
                                     </div>
                                     <div class="msg-text">${r.message}</div>
                                 </div>
@@ -1246,7 +1297,18 @@
         `;
     }
 
-    function assignTicket(id) {
+    async function assignTicket(id) {
+        if (backendOnline) {
+            const res = await fetch(`/tickets/${id}/assign`, { method: 'POST', headers: authHeader() });
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok) {
+                showToast('error', `${res.status} — ${data.code || 'ERROR'}:`, data.message || 'Ошибка назначения');
+                return;
+            }
+            showToast('success', '200 OK — Взято в работу:', `Назначен оператор ${currentAccount.fullName}`);
+            await renderAll();
+            return;
+        }
         if (currentAccount.role !== 'SUPPORT') {
             showToast('error', '403 Forbidden — ACCESS_DENIED:', 'Следователь не может вызывать команду оператора');
             return;
@@ -1265,12 +1327,27 @@
         renderAll();
     }
 
-    function sendReply(id) {
+    async function sendReply(id) {
+        const text = document.getElementById('replyText')?.value.trim() || '';
+        if (backendOnline) {
+            const res = await fetch(`/tickets/${id}/replies`, {
+                method: 'POST',
+                headers: { ...authHeader(), 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message: text })
+            });
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok) {
+                showToast('error', `${res.status} — ${data.code || 'ERROR'}:`, data.message || 'Ошибка отправки ответа');
+                return;
+            }
+            showToast('success', '201 Created — Ответ сохранён:', 'Ответ успешно добавлен в карточку');
+            await renderAll();
+            return;
+        }
         if (currentAccount.role !== 'SUPPORT') {
             showToast('error', '403 Forbidden — ACCESS_DENIED:', 'Отвечать может только оператор SUPPORT');
             return;
         }
-        const text = document.getElementById('replyText')?.value.trim() || '';
         if (!text) {
             showToast('error', '400 Bad Request — VALIDATION_ERROR:', 'Текст ответа не может быть пустым');
             return;
@@ -1297,7 +1374,18 @@
         renderAll();
     }
 
-    function closeTicket(id) {
+    async function closeTicket(id) {
+        if (backendOnline) {
+            const res = await fetch(`/tickets/${id}/close`, { method: 'POST', headers: authHeader() });
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok) {
+                showToast('error', `${res.status} — ${data.code || 'ERROR'}:`, data.message || 'Невозможно закрыть обращение');
+                return;
+            }
+            showToast('success', '200 OK — Обращение закрыто:', `Статус #${data.ticketNumber} переведён в CLOSED`);
+            await renderAll();
+            return;
+        }
         if (currentAccount.role !== 'SUPPORT') {
             showToast('error', '403 Forbidden — ACCESS_DENIED:', 'Закрыть обращение может только оператор');
             return;
@@ -1321,10 +1409,37 @@
     function openModal() { document.getElementById('createModal').classList.add('open'); }
     function closeModal() { document.getElementById('createModal').classList.remove('open'); }
 
-    function createTicket() {
+    async function createTicket() {
         const title = document.getElementById('newTitle').value.trim();
         const desc = document.getElementById('newDesc').value.trim();
         const file = document.getElementById('newFile').files[0];
+
+        if (backendOnline) {
+            const formData = new FormData();
+            formData.append('title', title);
+            formData.append('description', desc);
+            if (file) {
+                formData.append('file', file);
+            }
+            const res = await fetch('/tickets', {
+                method: 'POST',
+                headers: authHeader(),
+                body: formData
+            });
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok) {
+                showToast('error', `${res.status} — ${data.code || 'ERROR'}:`, data.message || 'Ошибка создания обращения');
+                return;
+            }
+            selectedTicketId = data.id;
+            document.getElementById('newTitle').value = '';
+            document.getElementById('newDesc').value = '';
+            document.getElementById('newFile').value = '';
+            closeModal();
+            showToast('success', '201 Created:', `Создано обращение #${data.ticketNumber}`);
+            await renderAll();
+            return;
+        }
 
         if (!title || !desc) {
             showToast('error', '400 Bad Request — VALIDATION_ERROR:', 'Тема и описание обязательны');
@@ -1357,7 +1472,26 @@
         renderAll();
     }
 
-    function downloadAttachment(name) {
+    async function downloadAttachment(id, name) {
+        if (backendOnline) {
+            const res = await fetch(`/tickets/${id}/attachment`, { headers: authHeader() });
+            if (!res.ok) {
+                const err = await res.json().catch(() => ({}));
+                showToast('error', `${res.status} — ${err.code || 'ERROR'}:`, err.message || 'Не удалось скачать файл');
+                return;
+            }
+            const blob = await res.blob();
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = name || 'error.png';
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            URL.revokeObjectURL(url);
+            showToast('success', '200 OK — Скачивание:', `Файл ${name} успешно скачан из MinIO`);
+            return;
+        }
         showToast('success', '200 OK — Скачивание:', `Файл ${name} успешно загружен из MinIO`);
     }
 
