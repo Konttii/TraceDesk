@@ -37,13 +37,14 @@ public class TicketController {
     }
 
     @Operation(
-            summary = "3.1 Создать обращение",
-            description = "Принимает тему, описание и необязательный скриншот (PNG/JPEG до 5 МБ) через multipart/form-data. Сохраняет статус OPEN и возвращает 201 с ID и номером обращения."
+            summary = "3.1 Создать обращение (только INVESTIGATOR)",
+            description = "Доступно только следователям (INVESTIGATOR). Принимает тему, описание и необязательный скриншот (PNG/JPEG до 5 МБ) через multipart/form-data. Сохраняет статус OPEN и возвращает 201 с ID и номером обращения."
     )
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "Обращение успешно создано"),
             @ApiResponse(responseCode = "400", description = "Пустые тема/описание, неверный формат файла или превышен размер 5 МБ"),
-            @ApiResponse(responseCode = "401", description = "Не авторизован")
+            @ApiResponse(responseCode = "401", description = "Не авторизован"),
+            @ApiResponse(responseCode = "403", description = "Доступно только для роли INVESTIGATOR (оператор SUPPORT не может создавать обращения)")
     })
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<TicketCreatedResponse> createTicket(

@@ -147,6 +147,14 @@ class TicketIntegrationTest {
 
         Long ticketId = extractId(createResult.getResponse().getContentAsString());
 
+        // 0. Оператор Олег НЕ может создавать обращение (только следователь INVESTIGATOR -> 403)
+        mockMvc.perform(multipart("/tickets")
+                        .param("title", "Тикет от оператора")
+                        .param("description", "Попытка оператора создать тикет")
+                        .with(httpBasic("oleg", "password")))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code").value("ACCESS_DENIED"));
+
         // 1. Павел НЕ может прочитать карточку Ирины (403)
         mockMvc.perform(get("/tickets/{id}", ticketId)
                         .with(httpBasic("pavel", "password")))

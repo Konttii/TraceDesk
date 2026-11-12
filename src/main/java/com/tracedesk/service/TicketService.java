@@ -40,9 +40,11 @@ public class TicketService {
         this.storageService = storageService;
     }
 
-    // 3.1 Создать обращение
+    // 3.1 Создать обращение (только следователь INVESTIGATOR)
     @Transactional
     public TicketCreatedResponse createTicket(User currentUser, String title, String description, MultipartFile attachment) {
+        requireInvestigatorRole(currentUser);
+
         if (title == null || title.isBlank()) {
             throw new ApiException(ErrorCode.VALIDATION_ERROR, "Тема обращения не может быть пустой");
         }
@@ -232,6 +234,12 @@ public class TicketService {
     private void requireSupportRole(User currentUser) {
         if (currentUser.getRole() != Role.SUPPORT) {
             throw new ApiException(ErrorCode.ACCESS_DENIED, "Операция доступна только операторам техподдержки (SUPPORT)");
+        }
+    }
+
+    private void requireInvestigatorRole(User currentUser) {
+        if (currentUser.getRole() != Role.INVESTIGATOR) {
+            throw new ApiException(ErrorCode.ACCESS_DENIED, "Создавать обращения могут только следователи (INVESTIGATOR)");
         }
     }
 
