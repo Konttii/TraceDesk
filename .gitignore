@@ -29,3 +29,7 @@ out/
 *.log
 .DS_Store
 Thumbs.db
+
+# Project documentation & defense notes
+PROJECT_DEFENSE.md
+
