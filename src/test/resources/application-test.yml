@@ -1,0 +1,14 @@
+spring:
+  datasource:
+    hikari:
+      schema: tracedesk_test
+  flyway:
+    schemas: tracedesk_test
+    create-schemas: true
+  jpa:
+    properties:
+      hibernate:
+        default_schema: tracedesk_test
+
+minio:
+  bucket: tracedesk-attachments-test
