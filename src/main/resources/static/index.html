@@ -305,6 +305,38 @@
             gap: 12px;
         }
 
+        .pagination-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 14px;
+            border-top: 1px solid #e2e8f0;
+            background: #f8fafc;
+            border-radius: 0 0 14px 14px;
+            font-size: 12.5px;
+            color: #475569;
+        }
+
+        .page-btn {
+            background: #ffffff;
+            border: 1px solid #cbd5e1;
+            border-radius: 7px;
+            padding: 5px 10px;
+            font-size: 12.5px;
+            font-weight: 600;
+            color: #1e293b;
+            cursor: pointer;
+        }
+
+        .page-btn:hover:not(:disabled) {
+            background: #e2e8f0;
+        }
+
+        .page-btn:disabled {
+            opacity: 0.45;
+            cursor: not-allowed;
+        }
+
         .ticket-item {
             background: #ffffff;
             border: 1px solid #cbd5e1;
@@ -859,6 +891,7 @@
             </div>
         </div>
         <div class="tickets-list" id="ticketsList"></div>
+        <div class="pagination-bar" id="paginationBar"></div>
     </aside>
 
     <!-- Правая карточка: Детали обращения -->
@@ -907,8 +940,12 @@
         { username: 'anna',  password: 'password', fullName: 'Анна Волкова',   shortName: 'Анна',  title: 'Оператор',    role: 'SUPPORT' }
     ];
 
+    const PAGE_SIZE = 10;
     let currentAccount = ACCOUNTS[2]; // По умолчанию Олег Смирнов (SUPPORT)
     let currentFilter = 'ALL';
+    let currentPage = 0;
+    let totalPages = 1;
+    let totalElements = 0;
     let selectedTicketId = 1;
     let backendOnline = false;
 
@@ -1041,6 +1078,8 @@
     async function switchAccount(username) {
         currentAccount = ACCOUNTS.find(a => a.username === username);
         sessionStorage.setItem('tracedesk_user', username);
+        currentPage = 0;
+        selectedTicketId = null;
         document.getElementById('profileDropdown').classList.remove('open');
         renderHeader();
         await renderAll();
@@ -1077,8 +1116,17 @@
 
     async function setFilter(filter, btn) {
         currentFilter = filter;
+        currentPage = 0;
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
+        await renderAll();
+    }
+
+    async function changePage(delta) {
+        const nextPage = currentPage + delta;
+        if (nextPage < 0 || nextPage >= totalPages) return;
+        currentPage = nextPage;
+        selectedTicketId = null;
         await renderAll();
     }
 
@@ -1089,9 +1137,14 @@
         if (backendOnline) {
             try {
                 const statusQuery = currentFilter !== 'ALL' ? `&status=${currentFilter}` : '';
-                const res = await fetch(`/tickets?page=0&size=50${statusQuery}`, { headers: authHeader() });
+                const res = await fetch(`/tickets?page=${currentPage}&size=${PAGE_SIZE}${statusQuery}`, { headers: authHeader() });
                 if (res.ok) {
                     const page = await res.json();
+                    totalPages = Math.max(page.totalPages || 1, 1);
+                    totalElements = page.totalElements ?? 0;
+                    if (currentPage >= totalPages) {
+                        currentPage = Math.max(totalPages - 1, 0);
+                    }
                     list = (page.content || []).map(t => ({
                         ...t,
                         attachmentName: t.hasAttachment ? 'error.png' : null
@@ -1117,14 +1170,31 @@
                 ? all
                 : all.filter(t => t.authorUsername === currentAccount.username);
 
-            list = currentFilter !== 'ALL'
+            const filtered = currentFilter !== 'ALL'
                 ? accessible.filter(t => t.status === currentFilter)
                 : accessible;
 
-            if (selectedTicketId === null || !accessible.some(t => t.id === selectedTicketId)) {
-                selectedTicketId = accessible.length > 0 ? accessible[0].id : null;
+            totalElements = filtered.length;
+            totalPages = Math.max(Math.ceil(totalElements / PAGE_SIZE), 1);
+            if (currentPage >= totalPages) {
+                currentPage = totalPages - 1;
+            }
+            const start = currentPage * PAGE_SIZE;
+            list = filtered.slice(start, start + PAGE_SIZE);
+
+            if (selectedTicketId === null || !list.some(t => t.id === selectedTicketId)) {
+                selectedTicketId = list.length > 0 ? list[0].id : null;
             }
             activeTicket = accessible.find(t => t.id === selectedTicketId);
+        }
+
+        const paginationEl = document.getElementById('paginationBar');
+        if (paginationEl) {
+            paginationEl.innerHTML = `
+                <button class="page-btn" onclick="changePage(-1)" ${currentPage <= 0 ? 'disabled' : ''}>← Назад</button>
+                <span>Стр. <b>${currentPage + 1}</b> из <b>${totalPages}</b> (${totalElements})</span>
+                <button class="page-btn" onclick="changePage(1)" ${currentPage + 1 >= totalPages ? 'disabled' : ''}>Вперёд →</button>
+            `;
         }
 
         const listEl = document.getElementById('ticketsList');
@@ -1457,6 +1527,7 @@
                 showToast('error', `${res.status} — ${data.code || 'ERROR'}:`, data.message || 'Ошибка создания обращения');
                 return;
             }
+            currentPage = 0;
             selectedTicketId = data.id;
             document.getElementById('newTitle').value = '';
             document.getElementById('newDesc').value = '';
@@ -1492,6 +1563,7 @@
             history: []
         });
         saveLocalTickets(all);
+        currentPage = 0;
         selectedTicketId = nextId;
         closeModal();
         showToast('success', '201 Created:', `Создано обращение #${num}`);
