@@ -79,7 +79,31 @@
             <version>${springdoc.version}</version>
         </dependency>
 
-        <!-- 9. Тестирование (Spring Boot Test, MockMvc, Security Test) -->
+        <!-- 9. Redis (черновики регистрации, OTP-коды и кулдауны) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-redis</artifactId>
+        </dependency>
+
+        <!-- 10. RabbitMQ (асинхронная очередь писем) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-amqp</artifactId>
+        </dependency>
+
+        <!-- 11. Отправка писем через SMTP -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-mail</artifactId>
+        </dependency>
+
+        <!-- 12. Шаблонизатор Thymeleaf для HTML-шаблонов писем -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-thymeleaf</artifactId>
+        </dependency>
+
+        <!-- 13. Тестирование (Spring Boot Test, MockMvc, Security Test) -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
