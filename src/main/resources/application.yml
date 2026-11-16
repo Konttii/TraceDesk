@@ -44,6 +44,10 @@ spring:
           auth: ${MAIL_SMTP_AUTH:false}
           starttls:
             enable: ${MAIL_SMTP_STARTTLS:false}
+            required: ${MAIL_SMTP_STARTTLS:false}
+          connectiontimeout: 5000
+          timeout: 5000
+          writetimeout: 5000
 
   servlet:
     multipart:
@@ -59,3 +63,6 @@ minio:
 app:
   demo:
     password: ${DEMO_PASSWORD:password}
+  mail:
+    from: ${MAIL_FROM:noreply@tracedesk.kz}
+    sender-name: ${MAIL_SENDER_NAME:TraceDesk Security}
