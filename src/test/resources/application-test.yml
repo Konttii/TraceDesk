@@ -9,6 +9,18 @@ spring:
     properties:
       hibernate:
         default_schema: tracedesk_test
+  mail:
+    host: localhost
+    port: 1025
+    username: ""
+    password: ""
+    properties:
+      mail:
+        smtp:
+          auth: false
+          starttls:
+            enable: false
+            required: false
 
 minio:
   bucket: tracedesk-attachments-test
