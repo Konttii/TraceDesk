@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Решение по заявке TraceDesk</title>
+</head>
+<body style="margin:0;padding:24px;background-color:#f4f6f9;font-family:Arial,sans-serif;color:#1e293b;">
+<div style="max-width:520px;margin:0 auto;background:#ffffff;border-radius:12px;padding:32px;border:1px solid #e2e8f0;">
+    <h2 style="margin-top:0;color:#0f172a;">Статус вашей заявки в TraceDesk</h2>
+    <p>Здравствуйте, <strong th:text="${firstName}">Пользователь</strong>!</p>
+
+    <div th:if="${approved or decision == 'APPROVE'}"
+         style="margin:20px 0;padding:16px;background:#ecfdf5;border-left:4px solid #10b981;border-radius:6px;">
+        <p style="margin:0;font-weight:bold;color:#065f46;">Доступ открыт (APPROVE)</p>
+        <p style="margin:8px 0 0 0;color:#047857;">
+            Администратор подтвердил вашу учётную запись. Теперь вы можете войти в систему по вашему ИИН
+            (<strong th:text="${iin}">000000000000</strong>) и паролю.
+        </p>
+    </div>
+
+    <div th:unless="${approved or decision == 'APPROVE'}"
+         style="margin:20px 0;padding:16px;background:#fef2f2;border-left:4px solid #ef4444;border-radius:6px;">
+        <p style="margin:0;font-weight:bold;color:#991b1b;">В доступе отказано (REJECT)</p>
+        <p style="margin:8px 0 0 0;color:#b91c1c;">
+            К сожалению, администратор отклонил вашу заявку на регистрацию в системе TraceDesk.
+        </p>
+    </div>
+</div>
+</body>
+</html>
