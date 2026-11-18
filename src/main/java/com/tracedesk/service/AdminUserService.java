@@ -23,11 +23,15 @@ import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.util.List;
+import java.util.regex.Pattern;
 
 @Service
 public class AdminUserService {
 
     private static final List<Role> STAFF_ROLES = List.of(Role.INVESTIGATOR, Role.SUPPORT);
+    private static final Pattern NAME_PATTERN = Pattern.compile(
+            "^[A-Za-zА-Яа-яЁёӘәҒғҚқҢңӨөҰұҮүҺһІі]+(?:[\\s-][A-Za-zА-Яа-яЁёӘәҒғҚқҢңӨөҰұҮүҺһІі]+)*$"
+    );
 
     private final UserRepository userRepository;
     private final RegionRepository regionRepository;
@@ -132,10 +136,10 @@ public class AdminUserService {
         User user = getUserOrThrow(id);
 
         if (request.firstName() != null) {
-            user.setFirstName(requireNonBlank(request.firstName(), "Имя не может быть пустым", 50));
+            user.setFirstName(validatePersonName(request.firstName(), "Имя"));
         }
         if (request.lastName() != null) {
-            user.setLastName(requireNonBlank(request.lastName(), "Фамилия не может быть пустой", 50));
+            user.setLastName(validatePersonName(request.lastName(), "Фамилия"));
         }
         if (request.firstName() != null || request.lastName() != null) {
             String last = user.getLastName() != null ? user.getLastName() : "";
@@ -199,13 +203,19 @@ public class AdminUserService {
                 .orElseThrow(() -> new ApiException(ErrorCode.USER_NOT_FOUND, "Пользователь с ID " + id + " не найден"));
     }
 
-    private String requireNonBlank(String value, String errorMessage, int maxLen) {
+    private String validatePersonName(String value, String fieldLabel) {
         if (value == null || value.isBlank()) {
-            throw new ApiException(ErrorCode.VALIDATION_ERROR, errorMessage);
+            throw new ApiException(ErrorCode.VALIDATION_ERROR, fieldLabel + " не может быть пустым");
         }
         String trimmed = value.trim();
-        if (trimmed.length() > maxLen) {
-            throw new ApiException(ErrorCode.VALIDATION_ERROR, errorMessage + " (макс. " + maxLen + " символов)");
+        if (trimmed.length() < 2 || trimmed.length() > 50) {
+            throw new ApiException(ErrorCode.VALIDATION_ERROR, fieldLabel + " должно содержать от 2 до 50 символов");
+        }
+        if (!NAME_PATTERN.matcher(trimmed).matches()) {
+            throw new ApiException(
+                    ErrorCode.VALIDATION_ERROR,
+                    fieldLabel + " должно содержать только буквы (без цифр и спецсимволов)"
+            );
         }
         return trimmed;
     }

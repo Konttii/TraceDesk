@@ -38,7 +38,7 @@ public class EmailNotificationConsumer {
         this.senderName = senderName;
     }
 
-    @RabbitListener(queues = RabbitMqConfig.EMAIL_QUEUE)
+    @RabbitListener(queues = "${app.rabbitmq.email-queue:" + RabbitMqConfig.EMAIL_QUEUE + "}")
     public void handleEmailMessage(EmailMessageEvent event) {
         try {
             Context context = new Context(Locale.forLanguageTag("ru"));

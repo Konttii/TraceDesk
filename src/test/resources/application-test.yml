@@ -24,3 +24,12 @@ spring:
 
 minio:
   bucket: tracedesk-attachments-test
+
+app:
+  mail:
+    from: noreply@tracedesk.test
+    sender-name: TraceDesk Test
+  rabbitmq:
+    email-exchange: tracedesk.email.exchange.test
+    email-queue: tracedesk.email.queue.test
+    email-routing-key: tracedesk.email.routing-key.test

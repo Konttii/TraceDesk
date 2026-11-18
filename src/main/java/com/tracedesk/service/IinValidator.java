@@ -12,10 +12,23 @@ import java.util.regex.Pattern;
 public class IinValidator {
 
     private static final Pattern TWELVE_DIGITS = Pattern.compile("^\\d{12}$");
+    private static final int[] WEIGHTS_FIRST = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11};
+    private static final int[] WEIGHTS_SECOND = {3, 4, 5, 6, 7, 8, 9, 10, 11, 1, 2};
 
     public boolean isValid(String iin) {
+        return getValidationError(iin) == null;
+    }
+
+    public void validateOrThrow(String iin) {
+        String error = getValidationError(iin);
+        if (error != null) {
+            throw new ApiException(ErrorCode.VALIDATION_ERROR, error);
+        }
+    }
+
+    public String getValidationError(String iin) {
         if (iin == null || !TWELVE_DIGITS.matcher(iin).matches()) {
-            return false;
+            return "ИИН должен состоять ровно из 12 цифр";
         }
 
         int yy = Integer.parseInt(iin.substring(0, 2));
@@ -27,23 +40,49 @@ public class IinValidator {
             case 1, 2 -> 1800;
             case 3, 4 -> 1900;
             case 5, 6 -> 2000;
-            default -> (yy == 0) ? 2000 : 1900;
+            default -> -1;
         };
-
-        try {
-            LocalDate.of(centuryBase + yy, mm, dd);
-            return true;
-        } catch (DateTimeException ex) {
-            return false;
+        if (centuryBase == -1) {
+            return "Некорректная 7-я цифра ИИН (век и пол должны быть от 1 до 6)";
         }
+
+        LocalDate birthDate;
+        try {
+            birthDate = LocalDate.of(centuryBase + yy, mm, dd);
+        } catch (DateTimeException ex) {
+            return "Некорректная дата рождения в первых 6 цифрах ИИН (ГГММДД)";
+        }
+
+        LocalDate today = LocalDate.now();
+        if (birthDate.isAfter(today)) {
+            return "Дата рождения в ИИН не может быть в будущем";
+        }
+        if (birthDate.isBefore(today.minusYears(100))) {
+            return "Некорректный год рождения в ИИН (" + birthDate.getYear() + ")";
+        }
+
+        int expectedControlDigit = calculateControlDigit(iin);
+        int actualControlDigit = Character.digit(iin.charAt(11), 10);
+        if (expectedControlDigit == 10 || expectedControlDigit != actualControlDigit) {
+            return "Некорректный ИИН: неверная контрольная (12-я) цифра";
+        }
+
+        return null;
     }
 
-    public void validateOrThrow(String iin) {
-        if (iin == null || !TWELVE_DIGITS.matcher(iin).matches()) {
-            throw new ApiException(ErrorCode.VALIDATION_ERROR, "ИИН должен состоять ровно из 12 цифр");
+    private int calculateControlDigit(String iin) {
+        int sum = 0;
+        for (int i = 0; i < 11; i++) {
+            sum += Character.digit(iin.charAt(i), 10) * WEIGHTS_FIRST[i];
         }
-        if (!isValid(iin)) {
-            throw new ApiException(ErrorCode.VALIDATION_ERROR, "Некорректная дата рождения в первых 6 цифрах ИИН (ГГММДД)");
+        int mod = sum % 11;
+        if (mod == 10) {
+            sum = 0;
+            for (int i = 0; i < 11; i++) {
+                sum += Character.digit(iin.charAt(i), 10) * WEIGHTS_SECOND[i];
+            }
+            mod = sum % 11;
         }
+        return mod;
     }
 }

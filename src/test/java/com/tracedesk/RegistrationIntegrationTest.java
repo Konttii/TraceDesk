@@ -67,9 +67,12 @@ class RegistrationIntegrationTest {
     }
 
     @Test
-    @DisplayName("Валидаторы ИИН и пароля корректно проверяют формат, дату ГГММДД и оценку надёжности (WEAK/MEDIUM/STRONG)")
+    @DisplayName("Валидаторы ИИН и пароля корректно проверяют формат, дату ГГММДД, 7-ю цифру, контрольную сумму mod-11 и оценку надёжности (WEAK/MEDIUM/STRONG)")
     void iinAndPasswordValidatorsTest() {
         assertThat(iinValidator.isValid("980515300111")).isTrue();
+        assertThat(iinValidator.isValid("111111111111")).isFalse(); // 1811 год и неверная контрольная цифра
+        assertThat(iinValidator.isValid("980515300112")).isFalse(); // неверная 12-я контрольная цифра
+        assertThat(iinValidator.isValid("980515900111")).isFalse(); // неверная 7-я цифра века/пола
         assertThat(iinValidator.isValid("981315300111")).isFalse(); // месяц 13
         assertThat(iinValidator.isValid("980230300111")).isFalse(); // 30 февраля
         assertThat(iinValidator.isValid("123456")).isFalse();

@@ -47,8 +47,13 @@ public class RegistrationService {
     public static final int MAX_VERIFY_ATTEMPTS = 5;
     public static final int MAX_RESEND_COUNT = 3;
 
-    private static final Pattern EMAIL_PATTERN =
-            Pattern.compile("^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$");
+    private static final Pattern EMAIL_PATTERN = Pattern.compile(
+            "^[A-Za-z0-9_%+-]+(?:\\.[A-Za-z0-9_%+-]+)*@(?:[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?\\.)+[A-Za-z]{2,24}$"
+    );
+    private static final Pattern NAME_PATTERN = Pattern.compile(
+            "^[A-Za-zА-Яа-яЁёӘәҒғҚқҢңӨөҰұҮүҺһІі]+(?:[\\s-][A-Za-zА-Яа-яЁёӘәҒғҚқҢңӨөҰұҮүҺһІі]+)*$"
+    );
+    private static final Pattern TWELVE_DIGITS_PATTERN = Pattern.compile("^\\d{12}$");
     private static final Pattern OTP_PATTERN = Pattern.compile("^\\d{6}$");
 
     private final StringRedisTemplate redisTemplate;
@@ -95,11 +100,14 @@ public class RegistrationService {
         String normalizedEmail = validateAndNormalizeEmail(request.email());
         checkNotBanned(normalizedEmail);
 
-        String firstName = requireNonBlank(request.firstName(), "Имя не может быть пустым", 50);
-        String lastName = requireNonBlank(request.lastName(), "Фамилия не может быть пустой", 50);
+        String firstName = validatePersonName(request.firstName(), "Имя");
+        String lastName = validatePersonName(request.lastName(), "Фамилия");
         String iin = request.iin() != null ? request.iin().trim() : null;
 
-        iinValidator.validateOrThrow(iin);
+        if (iin == null || !TWELVE_DIGITS_PATTERN.matcher(iin).matches()) {
+            throw new ApiException(ErrorCode.VALIDATION_ERROR, "ИИН должен состоять ровно из 12 цифр");
+        }
+
         passwordValidator.validateOrThrow(request.password());
         PasswordStrength passwordStrength = passwordValidator.evaluateStrength(request.password());
 
@@ -111,6 +119,7 @@ public class RegistrationService {
         }
 
         checkUserUniqueness(iin, normalizedEmail);
+        iinValidator.validateOrThrow(iin);
 
         String regionId = request.regionId() != null ? request.regionId().trim() : null;
         if (regionId == null || regionId.isBlank() || !regionRepository.existsById(regionId)) {
@@ -347,19 +356,29 @@ public class RegistrationService {
             throw new ApiException(ErrorCode.VALIDATION_ERROR, "Email не может быть пустым");
         }
         String normalized = rawEmail.trim().toLowerCase(Locale.ROOT);
-        if (normalized.length() > 150 || !EMAIL_PATTERN.matcher(normalized).matches()) {
+        int atIndex = normalized.indexOf('@');
+        if (normalized.length() > 150
+                || atIndex <= 0
+                || atIndex > 64
+                || !EMAIL_PATTERN.matcher(normalized).matches()) {
             throw new ApiException(ErrorCode.VALIDATION_ERROR, "Некорректный формат электронной почты");
         }
         return normalized;
     }
 
-    private String requireNonBlank(String value, String errorMessage, int maxLen) {
+    private String validatePersonName(String value, String fieldLabel) {
         if (value == null || value.isBlank()) {
-            throw new ApiException(ErrorCode.VALIDATION_ERROR, errorMessage);
+            throw new ApiException(ErrorCode.VALIDATION_ERROR, fieldLabel + " не может быть пустым");
         }
         String trimmed = value.trim();
-        if (trimmed.length() > maxLen) {
-            throw new ApiException(ErrorCode.VALIDATION_ERROR, errorMessage + " (макс. " + maxLen + " символов)");
+        if (trimmed.length() < 2 || trimmed.length() > 50) {
+            throw new ApiException(ErrorCode.VALIDATION_ERROR, fieldLabel + " должно содержать от 2 до 50 символов");
+        }
+        if (!NAME_PATTERN.matcher(trimmed).matches()) {
+            throw new ApiException(
+                    ErrorCode.VALIDATION_ERROR,
+                    fieldLabel + " должно содержать только буквы (без цифр и спецсимволов)"
+            );
         }
         return trimmed;
     }
