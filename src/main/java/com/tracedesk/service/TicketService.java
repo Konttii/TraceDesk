@@ -61,6 +61,7 @@ public class TicketService {
         ticket.setDescription(description.trim());
         ticket.setStatus(TicketStatus.OPEN);
         ticket.setAuthor(currentUser);
+        ticket.setRegion(currentUser.getRegion());
 
         if (attachment != null && !attachment.isEmpty()) {
             StorageService.StoredAttachment stored = storageService.uploadAttachment(attachment);
@@ -83,14 +84,34 @@ public class TicketService {
         );
     }
 
-    // 3.2 и 3.4 Список обращений с фильтрацией по статусу и пагинацией
+    // 3.2 и 3.4 Список обращений с фильтрацией по статусу, региону и пагинацией
     @Transactional(readOnly = true)
-    public Page<TicketSummaryResponse> listTickets(User currentUser, TicketStatus status, Pageable pageable) {
+    public Page<TicketSummaryResponse> listTickets(
+            User currentUser,
+            TicketStatus status,
+            String regionId,
+            Pageable pageable
+    ) {
         Page<Ticket> page;
-        if (currentUser.getRole() == Role.SUPPORT) {
+        if (currentUser.getRole() == Role.ADMIN) {
+            String normalizedRegionId = (regionId != null && !regionId.isBlank()) ? regionId.trim() : null;
+            if (normalizedRegionId != null && status != null) {
+                page = ticketRepository.findByRegionIdAndStatus(normalizedRegionId, status, pageable);
+            } else if (normalizedRegionId != null) {
+                page = ticketRepository.findByRegionId(normalizedRegionId, pageable);
+            } else if (status != null) {
+                page = ticketRepository.findByStatus(status, pageable);
+            } else {
+                page = ticketRepository.findAll(pageable);
+            }
+        } else if (currentUser.getRole() == Role.SUPPORT) {
+            if (currentUser.getRegion() == null || currentUser.getRegion().getId() == null) {
+                return Page.empty(pageable);
+            }
+            String supportRegionId = currentUser.getRegion().getId();
             page = (status != null)
-                    ? ticketRepository.findByStatus(status, pageable)
-                    : ticketRepository.findAll(pageable);
+                    ? ticketRepository.findByRegionIdAndStatus(supportRegionId, status, pageable)
+                    : ticketRepository.findByRegionId(supportRegionId, pageable);
         } else {
             page = (status != null)
                     ? ticketRepository.findByAuthorIdAndStatus(currentUser.getId(), status, pageable)
@@ -113,6 +134,7 @@ public class TicketService {
         requireSupportRole(currentUser);
 
         Ticket ticket = getTicketOrThrow(ticketId);
+        checkSupportRegionAccess(currentUser, ticket);
         if (ticket.getStatus() != TicketStatus.OPEN) {
             throw new ApiException(
                     ErrorCode.TICKET_ALREADY_ASSIGNED,
@@ -142,6 +164,7 @@ public class TicketService {
         }
 
         Ticket ticket = getTicketOrThrow(ticketId);
+        checkSupportRegionAccess(currentUser, ticket);
         if (ticket.getStatus() != TicketStatus.IN_PROGRESS) {
             throw new ApiException(
                     ErrorCode.INVALID_TICKET_STATUS,
@@ -171,6 +194,7 @@ public class TicketService {
         requireSupportRole(currentUser);
 
         Ticket ticket = getTicketOrThrow(ticketId);
+        checkSupportRegionAccess(currentUser, ticket);
         if (ticket.getStatus() != TicketStatus.IN_PROGRESS) {
             throw new ApiException(
                     ErrorCode.INVALID_TICKET_STATUS,
@@ -223,11 +247,22 @@ public class TicketService {
     }
 
     private void checkReadAccess(User currentUser, Ticket ticket) {
+        if (currentUser.getRole() == Role.ADMIN) {
+            return;
+        }
         if (currentUser.getRole() == Role.SUPPORT) {
+            checkSupportRegionAccess(currentUser, ticket);
             return;
         }
         if (!ticket.getAuthor().getId().equals(currentUser.getId())) {
             throw new ApiException(ErrorCode.ACCESS_DENIED, "Доступ к чужому обращению запрещён");
+        }
+    }
+
+    private void checkSupportRegionAccess(User currentUser, Ticket ticket) {
+        if (currentUser.getRegion() == null || ticket.getRegion() == null
+                || !ticket.getRegion().getId().equals(currentUser.getRegion().getId())) {
+            throw new ApiException(ErrorCode.ACCESS_DENIED, "Доступ к обращениям другого региона запрещён");
         }
     }
 
@@ -249,6 +284,8 @@ public class TicketService {
                 t.getTicketNumber(),
                 t.getTitle(),
                 t.getStatus(),
+                t.getRegion() != null ? t.getRegion().getId() : null,
+                t.getRegion() != null ? t.getRegion().getName() : null,
                 t.getAuthor().getUsername(),
                 t.getAuthor().getFullName(),
                 t.getAssignee() != null ? t.getAssignee().getUsername() : null,
@@ -289,6 +326,8 @@ public class TicketService {
                 t.getTitle(),
                 t.getDescription(),
                 t.getStatus(),
+                t.getRegion() != null ? t.getRegion().getId() : null,
+                t.getRegion() != null ? t.getRegion().getName() : null,
                 t.getAuthor().getUsername(),
                 t.getAuthor().getFullName(),
                 t.getAssignee() != null ? t.getAssignee().getUsername() : null,

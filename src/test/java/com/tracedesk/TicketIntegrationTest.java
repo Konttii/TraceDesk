@@ -1,8 +1,13 @@
 package com.tracedesk;
 
 import com.tracedesk.domain.entity.Ticket;
+import com.tracedesk.domain.entity.User;
+import com.tracedesk.domain.enums.Role;
 import com.tracedesk.domain.enums.TicketStatus;
+import com.tracedesk.domain.enums.UserStatus;
+import com.tracedesk.repository.RegionRepository;
 import com.tracedesk.repository.TicketRepository;
+import com.tracedesk.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -11,6 +16,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
@@ -50,9 +56,19 @@ class TicketIntegrationTest {
     @Autowired
     private TicketRepository ticketRepository;
 
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private RegionRepository regionRepository;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
     @BeforeEach
     void cleanTickets() {
         ticketRepository.deleteAll();
+        userRepository.findByIin("930303300099").ifPresent(userRepository::delete);
     }
 
     @Test
@@ -202,52 +218,71 @@ class TicketIntegrationTest {
     }
 
     @Test
-    @DisplayName("Проверка конкурентности: Два оператора одновременно берут одно OPEN-обращение, один получает 200, второй — 409")
+    @DisplayName("Проверка конкурентности: Два оператора одного региона одновременно берут одно OPEN-обращение, один получает 200, второй — 409")
     void concurrentAssignRaceConditionTest() throws Exception {
-        MvcResult createResult = mockMvc.perform(multipart("/tickets")
-                        .param("title", "Гонка операторов")
-                        .param("description", "Проверка оптимистической блокировки")
-                        .with(httpBasic("irina", "password")))
-                .andExpect(status().isCreated())
-                .andReturn();
+        User astanaSupport2 = new User(
+                "930303300099",
+                "Тестов Оператор Астаны",
+                passwordEncoder.encode("password"),
+                Role.SUPPORT
+        );
+        astanaSupport2.setIin("930303300099");
+        astanaSupport2.setEmail("astana.support2@tracedesk.kz");
+        astanaSupport2.setFirstName("Оператор");
+        astanaSupport2.setLastName("Тестов");
+        astanaSupport2.setStatus(UserStatus.ACTIVE);
+        astanaSupport2.setRegion(regionRepository.findById("01").orElseThrow());
+        userRepository.save(astanaSupport2);
 
-        Long ticketId = extractId(createResult.getResponse().getContentAsString());
+        try {
+            MvcResult createResult = mockMvc.perform(multipart("/tickets")
+                            .param("title", "Гонка операторов")
+                            .param("description", "Проверка оптимистической блокировки")
+                            .with(httpBasic("irina", "password")))
+                    .andExpect(status().isCreated())
+                    .andReturn();
 
-        ExecutorService executor = Executors.newFixedThreadPool(2);
-        CountDownLatch readyLatch = new CountDownLatch(2);
-        CountDownLatch startLatch = new CountDownLatch(1);
+            Long ticketId = extractId(createResult.getResponse().getContentAsString());
 
-        Callable<Integer> olegTask = () -> {
-            readyLatch.countDown();
-            startLatch.await();
-            return mockMvc.perform(post("/tickets/{id}/assign", ticketId)
-                            .with(httpBasic("oleg", "password")))
-                    .andReturn().getResponse().getStatus();
-        };
+            ExecutorService executor = Executors.newFixedThreadPool(2);
+            CountDownLatch readyLatch = new CountDownLatch(2);
+            CountDownLatch startLatch = new CountDownLatch(1);
 
-        Callable<Integer> annaTask = () -> {
-            readyLatch.countDown();
-            startLatch.await();
-            return mockMvc.perform(post("/tickets/{id}/assign", ticketId)
-                            .with(httpBasic("anna", "password")))
-                    .andReturn().getResponse().getStatus();
-        };
+            Callable<Integer> olegTask = () -> {
+                readyLatch.countDown();
+                startLatch.await();
+                return mockMvc.perform(post("/tickets/{id}/assign", ticketId)
+                                .with(httpBasic("oleg", "password")))
+                        .andReturn().getResponse().getStatus();
+            };
 
-        List<Future<Integer>> futures = new ArrayList<>();
-        futures.add(executor.submit(olegTask));
-        futures.add(executor.submit(annaTask));
+            Callable<Integer> secondSupportTask = () -> {
+                readyLatch.countDown();
+                startLatch.await();
+                return mockMvc.perform(post("/tickets/{id}/assign", ticketId)
+                                .with(httpBasic("930303300099", "password")))
+                        .andReturn().getResponse().getStatus();
+            };
 
-        readyLatch.await(5, TimeUnit.SECONDS);
-        startLatch.countDown(); // Одновременный старт двух потоков!
+            List<Future<Integer>> futures = new ArrayList<>();
+            futures.add(executor.submit(olegTask));
+            futures.add(executor.submit(secondSupportTask));
 
-        int status1 = futures.get(0).get(10, TimeUnit.SECONDS);
-        int status2 = futures.get(1).get(10, TimeUnit.SECONDS);
-        executor.shutdown();
+            readyLatch.await(5, TimeUnit.SECONDS);
+            startLatch.countDown(); // Одновременный старт двух потоков!
 
-        assertThat(List.of(status1, status2)).containsExactlyInAnyOrder(200, 409);
+            int status1 = futures.get(0).get(10, TimeUnit.SECONDS);
+            int status2 = futures.get(1).get(10, TimeUnit.SECONDS);
+            executor.shutdown();
 
-        Ticket updated = ticketRepository.findById(ticketId).orElseThrow();
-        assertThat(updated.getStatus()).isEqualTo(TicketStatus.IN_PROGRESS);
+            assertThat(List.of(status1, status2)).containsExactlyInAnyOrder(200, 409);
+
+            Ticket updated = ticketRepository.findById(ticketId).orElseThrow();
+            assertThat(updated.getStatus()).isEqualTo(TicketStatus.IN_PROGRESS);
+        } finally {
+            ticketRepository.deleteAll();
+            userRepository.findByIin("930303300099").ifPresent(userRepository::delete);
+        }
     }
 
     private Long extractId(String json) {

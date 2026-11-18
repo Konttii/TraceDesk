@@ -23,6 +23,12 @@ public interface TicketRepository extends JpaRepository<Ticket, Long> {
     Page<Ticket> findByStatus(TicketStatus status, Pageable pageable);
 
     @EntityGraph(attributePaths = {"author", "assignee", "region"})
+    Page<Ticket> findByRegionId(String regionId, Pageable pageable);
+
+    @EntityGraph(attributePaths = {"author", "assignee", "region"})
+    Page<Ticket> findByRegionIdAndStatus(String regionId, TicketStatus status, Pageable pageable);
+
+    @EntityGraph(attributePaths = {"author", "assignee", "region"})
     Page<Ticket> findByAuthorId(Long authorId, Pageable pageable);
 
     @EntityGraph(attributePaths = {"author", "assignee", "region"})
