@@ -15,23 +15,47 @@
         body {
             background: #eef2f6;
             color: #0f172a;
-            height: 100vh;
+            min-height: 100vh;
             display: flex;
             flex-direction: column;
+        }
+
+        body.app-mode {
+            height: 100vh;
             overflow: hidden;
         }
 
-        /* 1. СВЕТЛАЯ ШАПКА КАК НА ФОТО */
-        .navbar {
-            height: 68px;
+        .hidden {
+            display: none !important;
+        }
+
+        /* ==================== AUTH SCREEN ==================== */
+        .auth-screen {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 28px 16px;
+            background: linear-gradient(135deg, #eef2f6 0%, #e2e8f0 100%);
+        }
+
+        .auth-card {
+            width: 100%;
+            max-width: 540px;
             background: #ffffff;
-            border-bottom: 1px solid #dbe2ea;
+            border: 1px solid #d8e0ea;
+            border-radius: 16px;
+            box-shadow: 0 14px 36px rgba(15, 23, 42, 0.08);
+            overflow: hidden;
+        }
+
+        .auth-header {
+            padding: 24px 28px 18px 28px;
+            border-bottom: 1px solid #e2e8f0;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 0 28px;
-            flex-shrink: 0;
-            z-index: 40;
+            gap: 12px;
         }
 
         .brand {
@@ -49,6 +73,7 @@
             align-items: center;
             justify-content: center;
             border: 1px solid #bfdbfe;
+            flex-shrink: 0;
         }
 
         .brand-title {
@@ -64,7 +89,341 @@
             font-weight: 500;
         }
 
-        /* Капсула профиля справа вверху */
+        .auth-tabs {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            background: #f1f5f9;
+            padding: 4px;
+            margin: 18px 28px 0 28px;
+            border-radius: 10px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .auth-tab-btn {
+            border: none;
+            background: transparent;
+            padding: 9px 14px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 700;
+            color: #475569;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .auth-tab-btn.active {
+            background: #ffffff;
+            color: #0f172a;
+            box-shadow: 0 1px 3px rgba(15, 23, 42, 0.1);
+        }
+
+        .auth-body {
+            padding: 20px 28px 26px 28px;
+        }
+
+        .form-grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        @media (max-width: 520px) {
+            .form-grid-2 {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .form-group {
+            margin-bottom: 14px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 6px;
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #cbd5e1;
+            border-radius: 9px;
+            font-size: 14px;
+            color: #0f172a;
+            background: #ffffff;
+            transition: border-color 0.15s, box-shadow 0.15s;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+        }
+
+        .form-group input.input-invalid,
+        .form-group select.input-invalid {
+            border-color: #dc2626;
+        }
+
+        .field-hint {
+            font-size: 12px;
+            color: #64748b;
+            margin-top: 5px;
+            line-height: 1.35;
+        }
+
+        .field-hint.error {
+            color: #b91c1c;
+        }
+
+        .field-hint.success {
+            color: #047857;
+        }
+
+        .password-wrap {
+            position: relative;
+        }
+
+        .password-wrap input {
+            padding-right: 42px;
+        }
+
+        .toggle-pass-btn {
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: transparent;
+            border: none;
+            color: #64748b;
+            cursor: pointer;
+            padding: 4px 6px;
+            font-size: 15px;
+            border-radius: 6px;
+        }
+
+        .toggle-pass-btn:hover {
+            color: #0f172a;
+            background: #f1f5f9;
+        }
+
+        /* Полоска надежности пароля */
+        .strength-box {
+            margin-top: 8px;
+        }
+
+        .strength-track {
+            width: 100%;
+            height: 7px;
+            background: #e2e8f0;
+            border-radius: 999px;
+            overflow: hidden;
+        }
+
+        .strength-fill {
+            height: 100%;
+            width: 0%;
+            border-radius: 999px;
+            transition: width 0.22s ease, background-color 0.22s ease;
+        }
+
+        .strength-fill.weak {
+            width: 33.333%;
+            background-color: #ef4444;
+        }
+
+        .strength-fill.medium {
+            width: 66.666%;
+            background-color: #f59e0b;
+        }
+
+        .strength-fill.strong {
+            width: 100%;
+            background-color: #10b981;
+        }
+
+        .strength-meta {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 5px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .strength-meta.weak { color: #dc2626; }
+        .strength-meta.medium { color: #b45309; }
+        .strength-meta.strong { color: #059669; }
+        .strength-meta.empty { color: #64748b; font-weight: 500; }
+
+        .alert-box {
+            border-radius: 10px;
+            padding: 12px 14px;
+            font-size: 13.5px;
+            line-height: 1.45;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            border: 1px solid transparent;
+        }
+
+        .alert-box.error {
+            background: #fef2f2;
+            border-color: #fecaca;
+            color: #991b1b;
+        }
+
+        .alert-box.warning {
+            background: #fffbeb;
+            border-color: #fde68a;
+            color: #92400e;
+        }
+
+        .alert-box.success {
+            background: #ecfdf5;
+            border-color: #a7f3d0;
+            color: #065f46;
+        }
+
+        .alert-box.info {
+            background: #eff6ff;
+            border-color: #bfdbfe;
+            color: #1e40af;
+        }
+
+        .primary-btn {
+            width: 100%;
+            background: #1e293b;
+            color: #ffffff;
+            border: none;
+            border-radius: 10px;
+            padding: 11px 18px;
+            font-size: 14.5px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+
+        .primary-btn:hover:not(:disabled) {
+            background: #0f172a;
+        }
+
+        .primary-btn:disabled {
+            opacity: 0.55;
+            cursor: not-allowed;
+        }
+
+        .demo-quick-box {
+            margin-top: 18px;
+            padding-top: 14px;
+            border-top: 1px dashed #cbd5e1;
+        }
+
+        .demo-quick-title {
+            font-size: 12px;
+            font-weight: 700;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+            margin-bottom: 8px;
+        }
+
+        .demo-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .demo-chip {
+            background: #f8fafc;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            padding: 5px 9px;
+            font-size: 12px;
+            color: #334155;
+            cursor: pointer;
+            transition: all 0.12s;
+        }
+
+        .demo-chip:hover {
+            background: #e0ecff;
+            border-color: #93c5fd;
+            color: #1d4ed8;
+        }
+
+        /* ==================== APP SHELL / NAVBAR ==================== */
+        .app-shell {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .navbar {
+            height: 68px;
+            background: #ffffff;
+            border-bottom: 1px solid #dbe2ea;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 28px;
+            flex-shrink: 0;
+            z-index: 40;
+            gap: 16px;
+        }
+
+        .nav-center {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: #f1f5f9;
+            padding: 4px;
+            border-radius: 10px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .nav-switch-btn {
+            border: none;
+            background: transparent;
+            padding: 7px 14px;
+            border-radius: 7px;
+            font-size: 13.5px;
+            font-weight: 700;
+            color: #475569;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            transition: all 0.14s;
+        }
+
+        .nav-switch-btn.active {
+            background: #ffffff;
+            color: #0f172a;
+            box-shadow: 0 1px 3px rgba(15, 23, 42, 0.1);
+        }
+
+        .count-pill {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 20px;
+            height: 20px;
+            padding: 0 6px;
+            border-radius: 999px;
+            background: #ef4444;
+            color: #ffffff;
+            font-size: 11px;
+            font-weight: 800;
+        }
+
         .profile-wrapper {
             position: relative;
         }
@@ -76,7 +435,7 @@
             background: #f8fafc;
             border: 1.5px solid #cbd5e1;
             border-radius: 999px;
-            padding: 6px 16px 6px 8px;
+            padding: 5px 14px 5px 7px;
             cursor: pointer;
             transition: all 0.15s ease;
         }
@@ -86,24 +445,29 @@
             border-color: #94a3b8;
         }
 
-        .avatar-img {
+        .avatar-circle {
             width: 38px;
             height: 38px;
             border-radius: 50%;
-            object-fit: cover;
-            border: 1px solid #cbd5e1;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 14px;
+            color: #ffffff;
             flex-shrink: 0;
-            background: #e2e8f0;
+            background: #334155;
         }
 
-        .avatar-sm {
+        .avatar-circle.sm {
             width: 28px;
             height: 28px;
-            border-radius: 50%;
-            object-fit: cover;
-            border: 1px solid #cbd5e1;
-            flex-shrink: 0;
+            font-size: 11px;
         }
+
+        .avatar-circle.ADMIN { background: #7c3aed; }
+        .avatar-circle.SUPPORT { background: #2563eb; }
+        .avatar-circle.INVESTIGATOR { background: #334155; }
 
         .profile-text {
             text-align: left;
@@ -135,13 +499,28 @@
             color: #334155;
         }
 
+        .role-tag.ADMIN {
+            background: #ede9fe;
+            color: #5b21b6;
+        }
+
+        .region-tag {
+            display: inline-block;
+            font-size: 11px;
+            font-weight: 600;
+            padding: 2px 8px;
+            border-radius: 999px;
+            background: #f1f5f9;
+            color: #334155;
+            border: 1px solid #cbd5e1;
+        }
+
         .chevron-icon {
             color: #475569;
             font-size: 14px;
-            margin-left: 4px;
+            margin-left: 2px;
         }
 
-        /* Выпадающее меню аккаунтов как на фото */
         .profile-dropdown {
             position: absolute;
             top: calc(100% + 8px);
@@ -160,76 +539,45 @@
             display: block;
         }
 
-        .dropdown-header {
-            padding: 12px 16px;
-            font-size: 13px;
-            font-weight: 600;
-            color: #64748b;
+        .dropdown-profile-card {
+            padding: 14px 16px;
             border-bottom: 1px solid #e2e8f0;
+            font-size: 12.5px;
+            color: #475569;
+            line-height: 1.55;
         }
 
-        .account-row {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 10px 14px;
-            cursor: pointer;
-            border-bottom: 1px solid #f1f5f9;
-            transition: background 0.12s;
-        }
-
-        .account-row:last-child {
-            border-bottom: none;
-        }
-
-        .account-row:hover {
-            background: #f8fafc;
-        }
-
-        .account-row.active {
-            background: #eaf2ff;
-        }
-
-        .check-col {
-            width: 18px;
-            color: #2563eb;
-            font-weight: 800;
-            font-size: 15px;
-            text-align: center;
-            flex-shrink: 0;
-        }
-
-        .account-meta {
-            flex: 1;
-            line-height: 1.3;
-        }
-
-        .account-meta-name {
-            font-size: 14px;
-            font-weight: 700;
+        .dropdown-profile-card b {
             color: #0f172a;
         }
 
-        .account-meta-sub {
-            font-size: 12px;
-            color: #475569;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            margin-top: 2px;
+        .dropdown-logout-btn {
+            width: 100%;
+            background: #ffffff;
+            border: none;
+            padding: 12px 16px;
+            text-align: left;
+            font-size: 13.5px;
+            font-weight: 700;
+            color: #b91c1c;
+            cursor: pointer;
+            transition: background 0.12s;
         }
 
-        /* 2. ДВЕ ПАРЯЩИЕ КАРТОЧКИ НА СВЕТЛО-СЕРОМ ФОНЕ */
+        .dropdown-logout-btn:hover {
+            background: #fef2f2;
+        }
+
+        /* ==================== TICKETS WORKSPACE ==================== */
         .workspace {
             flex: 1;
             display: grid;
-            grid-template-columns: 340px 1fr;
+            grid-template-columns: 350px 1fr;
             gap: 18px;
             padding: 18px 24px;
             overflow: hidden;
         }
 
-        /* Левая панель: Tickets */
         .tickets-panel {
             background: #ffffff;
             border: 1px solid #d8e0ea;
@@ -248,7 +596,7 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            margin-bottom: 14px;
+            margin-bottom: 12px;
         }
 
         .tickets-title {
@@ -272,6 +620,20 @@
             background: #0f172a;
         }
 
+        .admin-ticket-region-filter {
+            margin-bottom: 10px;
+        }
+
+        .admin-ticket-region-filter select {
+            width: 100%;
+            padding: 7px 10px;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            font-size: 12.5px;
+            color: #0f172a;
+            background: #f8fafc;
+        }
+
         .tabs-row {
             display: flex;
             gap: 4px;
@@ -282,7 +644,7 @@
             background: transparent;
             border: none;
             padding: 8px 10px;
-            font-size: 13px;
+            font-size: 12.5px;
             font-weight: 600;
             color: #475569;
             cursor: pointer;
@@ -360,12 +722,13 @@
             align-items: center;
             justify-content: space-between;
             margin-bottom: 6px;
+            gap: 6px;
         }
 
         .ticket-code {
             font-size: 13.5px;
             color: #475569;
-            font-weight: 500;
+            font-weight: 600;
         }
 
         .badge {
@@ -374,14 +737,15 @@
             padding: 3px 10px;
             border-radius: 999px;
             letter-spacing: 0.2px;
+            white-space: nowrap;
         }
 
-        .badge.OPEN {
+        .badge.OPEN, .badge.ACTIVE {
             background: #10b981;
             color: #ffffff;
         }
 
-        .badge.IN_PROGRESS {
+        .badge.IN_PROGRESS, .badge.PENDING_APPROVAL {
             background: #fde68a;
             color: #78350f;
         }
@@ -391,32 +755,44 @@
             color: #475569;
         }
 
+        .badge.BLOCKED, .badge.REJECTED {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
         .ticket-item-title {
-            font-size: 15.5px;
+            font-size: 15px;
             font-weight: 700;
             color: #0f172a;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
         }
 
         .ticket-item-author {
             display: flex;
             align-items: center;
             gap: 8px;
-            font-size: 13.5px;
+            font-size: 13px;
             color: #1e293b;
             font-weight: 500;
+        }
+
+        .ticket-item-meta {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            margin-top: 8px;
+            flex-wrap: wrap;
         }
 
         .ticket-item-file {
             display: flex;
             align-items: center;
-            gap: 6px;
-            font-size: 13px;
+            gap: 5px;
+            font-size: 12.5px;
             color: #334155;
-            margin-top: 8px;
         }
 
-        /* Правая панель: Карточка тикета */
         .detail-panel {
             background: #ffffff;
             border: 1px solid #d8e0ea;
@@ -447,11 +823,13 @@
             display: flex;
             align-items: center;
             gap: 10px;
+            flex-wrap: wrap;
         }
 
         .top-actions {
             display: flex;
             gap: 10px;
+            flex-shrink: 0;
         }
 
         .action-pill-btn {
@@ -485,7 +863,22 @@
             background: #fef2f2;
         }
 
-        /* Внутренняя сетка правой панели: слева степпер, справа контент и чат */
+        .action-pill-btn.success {
+            background: #059669;
+            border-color: #059669;
+            color: #ffffff;
+        }
+
+        .action-pill-btn.success:hover:not(:disabled) {
+            background: #047857;
+        }
+
+        .action-pill-btn.sm {
+            padding: 5px 11px;
+            font-size: 12.5px;
+            border-radius: 8px;
+        }
+
         .detail-body {
             flex: 1;
             display: grid;
@@ -495,7 +888,6 @@
             overflow-y: auto;
         }
 
-        /* Левый визуальный степпер статусов как на фото */
         .stepper-col {
             display: flex;
             flex-direction: column;
@@ -539,7 +931,7 @@
 
         .step-arrow {
             width: 2px;
-            height: 56px;
+            height: 52px;
             background: #cbd5e1;
             margin: 4px 0 4px 13px;
             position: relative;
@@ -558,21 +950,12 @@
             color: inherit;
         }
 
-        .step-caption {
-            font-size: 11px;
-            color: #64748b;
-            margin-left: 40px;
-            margin-top: 2px;
-        }
-
-        /* Правая колонка внутри карточки: вложение + сообщения + поле ввода */
         .conversation-col {
             display: flex;
             flex-direction: column;
             gap: 20px;
         }
 
-        /* Блок скриншота с превью как на фото */
         .attachment-card {
             display: inline-flex;
             align-items: center;
@@ -642,7 +1025,6 @@
             background: #e2e8f0;
         }
 
-        /* Сообщения в треде */
         .message-block {
             display: flex;
             flex-direction: column;
@@ -692,9 +1074,9 @@
             font-size: 14.5px;
             color: #1e293b;
             line-height: 1.5;
+            white-space: pre-wrap;
         }
 
-        /* Поле ввода сообщения (Composer) внизу как на фото */
         .composer-box {
             margin-top: auto;
             border: 1.5px solid #cbd5e1;
@@ -716,17 +1098,10 @@
         .composer-footer {
             display: flex;
             align-items: center;
-            justify-content: space-between;
+            justify-content: flex-end;
             margin-top: 8px;
             padding-top: 8px;
-        }
-
-        .composer-icons {
-            display: flex;
-            align-items: center;
-            gap: 14px;
-            color: #64748b;
-            font-size: 17px;
+            border-top: 1px solid #f1f5f9;
         }
 
         .send-btn {
@@ -740,11 +1115,316 @@
             cursor: pointer;
         }
 
-        .send-btn:hover {
+        .send-btn:hover:not(:disabled) {
             background: #0f172a;
         }
 
-        /* 3. ТЁМНО-БОРДОВЫЙ ТОСТ 409 CONFLICT В ПРАВОМ НИЖНЕМ УГЛУ КАК НА ФОТО */
+        .send-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* ==================== ADMIN PANEL ==================== */
+        .admin-workspace {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 18px 24px;
+            gap: 16px;
+            overflow: hidden;
+        }
+
+        .admin-subtabs {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #ffffff;
+            border: 1px solid #d8e0ea;
+            border-radius: 14px;
+            padding: 10px 18px;
+            flex-shrink: 0;
+        }
+
+        .admin-subtabs-left {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .admin-subtab-btn {
+            border: 1px solid transparent;
+            background: transparent;
+            padding: 8px 16px;
+            border-radius: 9px;
+            font-size: 14px;
+            font-weight: 700;
+            color: #475569;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.14s;
+        }
+
+        .admin-subtab-btn:hover {
+            background: #f1f5f9;
+            color: #0f172a;
+        }
+
+        .admin-subtab-btn.active {
+            background: #1e293b;
+            color: #ffffff;
+        }
+
+        .admin-pending-grid {
+            flex: 1;
+            display: grid;
+            grid-template-columns: 360px 1fr;
+            gap: 18px;
+            overflow: hidden;
+        }
+
+        .admin-card {
+            background: #ffffff;
+            border: 1px solid #d8e0ea;
+            border-radius: 14px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: 0 2px 6px rgba(15, 23, 42, 0.03);
+        }
+
+        .admin-card-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .admin-card-title {
+            font-size: 17px;
+            font-weight: 800;
+            color: #0f172a;
+        }
+
+        .pending-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .pending-item {
+            border: 1px solid #cbd5e1;
+            border-radius: 12px;
+            padding: 13px 15px;
+            cursor: pointer;
+            transition: all 0.12s;
+            background: #ffffff;
+        }
+
+        .pending-item:hover {
+            border-color: #64748b;
+            background: #f8fafc;
+        }
+
+        .pending-item.selected {
+            border: 2px solid #1e293b;
+            background: #f8fafc;
+        }
+
+        .pending-detail-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 24px 28px;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 16px;
+            margin-top: 18px;
+        }
+
+        .info-field {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 12px 14px;
+        }
+
+        .info-field-label {
+            font-size: 11.5px;
+            font-weight: 700;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            margin-bottom: 4px;
+        }
+
+        .info-field-value {
+            font-size: 14.5px;
+            font-weight: 700;
+            color: #0f172a;
+            word-break: break-word;
+        }
+
+        .users-filters {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 20px;
+            border-bottom: 1px solid #e2e8f0;
+            background: #f8fafc;
+            flex-wrap: wrap;
+        }
+
+        .users-filters select {
+            padding: 7px 10px;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            font-size: 13px;
+            background: #ffffff;
+            color: #0f172a;
+        }
+
+        .users-table-wrap {
+            flex: 1;
+            overflow: auto;
+        }
+
+        .users-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13.5px;
+        }
+
+        .users-table th {
+            text-align: left;
+            padding: 12px 16px;
+            background: #f8fafc;
+            color: #475569;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            border-bottom: 1px solid #e2e8f0;
+            position: sticky;
+            top: 0;
+            z-index: 2;
+        }
+
+        .users-table td {
+            padding: 12px 16px;
+            border-bottom: 1px solid #f1f5f9;
+            vertical-align: middle;
+        }
+
+        .users-table tr:hover td {
+            background: #f8fafc;
+        }
+
+        .table-actions {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        /* ==================== MODALS ==================== */
+        .modal-backdrop {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 200;
+            padding: 16px;
+        }
+
+        .modal-backdrop.open {
+            display: flex;
+        }
+
+        .modal {
+            background: #ffffff;
+            width: 100%;
+            max-width: 480px;
+            border-radius: 16px;
+            padding: 24px 26px;
+            box-shadow: 0 22px 48px rgba(15, 23, 42, 0.25);
+            max-height: 92vh;
+            overflow-y: auto;
+        }
+
+        .modal-title {
+            font-size: 19px;
+            font-weight: 800;
+            color: #0f172a;
+            margin-bottom: 6px;
+        }
+
+        .modal-subtitle {
+            font-size: 13.5px;
+            color: #475569;
+            line-height: 1.45;
+            margin-bottom: 16px;
+        }
+
+        .otp-email-pill {
+            display: inline-block;
+            background: #eff6ff;
+            border: 1px solid #bfdbfe;
+            color: #1d4ed8;
+            font-weight: 700;
+            padding: 4px 10px;
+            border-radius: 8px;
+            font-size: 13.5px;
+        }
+
+        .otp-input {
+            text-align: center;
+            font-size: 28px !important;
+            font-weight: 800;
+            letter-spacing: 12px;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            padding: 14px 16px !important;
+        }
+
+        .otp-footer-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 14px;
+        }
+
+        .resend-btn {
+            width: 100%;
+            background: #f8fafc;
+            border: 1.5px solid #cbd5e1;
+            border-radius: 10px;
+            padding: 10px 16px;
+            font-size: 13.5px;
+            font-weight: 700;
+            color: #0f172a;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .resend-btn:hover:not(:disabled) {
+            background: #e2e8f0;
+        }
+
+        .resend-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        /* ==================== TOASTS ==================== */
         .toast-container {
             position: fixed;
             bottom: 24px;
@@ -761,11 +1441,11 @@
             color: #ffffff;
             border: 1.5px solid #dc2626;
             border-radius: 12px;
-            padding: 16px 18px;
+            padding: 14px 18px;
             box-shadow: 0 12px 30px rgba(0, 0, 0, 0.28);
             display: flex;
             align-items: flex-start;
-            gap: 14px;
+            gap: 12px;
             position: relative;
         }
 
@@ -776,7 +1456,7 @@
 
         .toast-warn-icon {
             color: #ef4444;
-            font-size: 22px;
+            font-size: 20px;
             line-height: 1;
             margin-top: 2px;
         }
@@ -786,340 +1466,1638 @@
         }
 
         .toast-title {
-            font-size: 14px;
+            font-size: 13.5px;
             font-weight: 700;
-            margin-bottom: 4px;
+            margin-bottom: 3px;
             padding-right: 18px;
         }
 
         .toast-desc {
-            font-size: 13.5px;
+            font-size: 13px;
             color: #f1f5f9;
             line-height: 1.4;
         }
 
         .toast-close {
             position: absolute;
-            top: 12px;
-            right: 14px;
+            top: 10px;
+            right: 12px;
             background: none;
             border: none;
             color: #cbd5e1;
             font-size: 16px;
             cursor: pointer;
         }
-
-        /* Модальное окно создания обращения */
-        .modal-backdrop {
-            position: fixed;
-            inset: 0;
-            background: rgba(15, 23, 42, 0.45);
-            display: none;
-            align-items: center;
-            justify-content: center;
-            z-index: 200;
-        }
-
-        .modal-backdrop.open { display: flex; }
-
-        .modal {
-            background: #ffffff;
-            width: 460px;
-            border-radius: 14px;
-            padding: 24px;
-            box-shadow: 0 20px 40px rgba(15, 23, 42, 0.2);
-        }
-
-        .form-group { margin-bottom: 14px; }
-        .form-group label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; }
-        .form-group input, .form-group textarea {
-            width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1;
-            border-radius: 8px; font-size: 14px;
-        }
     </style>
 </head>
 <body>
 
-<!-- ШАПКА -->
-<header class="navbar">
-    <div class="brand">
-        <div class="brand-icon">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#1d4ed8" stroke-width="2">
-                <rect x="3" y="3" width="18" height="12" rx="2"/>
-                <path d="M2 19h20M8 15v4M16 15v4"/>
-            </svg>
+<!-- ==================== 1. ЭКРАН ВХОДА И РЕГИСТРАЦИИ ==================== -->
+<div class="auth-screen" id="authScreen">
+    <div class="auth-card">
+        <div class="auth-header">
+            <div class="brand">
+                <div class="brand-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#1d4ed8" stroke-width="2">
+                        <rect x="3" y="3" width="18" height="12" rx="2"/>
+                        <path d="M2 19h20M8 15v4M16 15v4"/>
+                    </svg>
+                </div>
+                <div>
+                    <div class="brand-title">TraceDesk</div>
+                    <div class="brand-subtitle">Портал техподдержки РК</div>
+                </div>
+            </div>
         </div>
-        <div>
-            <div class="brand-title">TraceDesk</div>
-            <div class="brand-subtitle">Техподдержка</div>
+
+        <div class="auth-tabs">
+            <button type="button" class="auth-tab-btn active" id="tabLoginBtn" onclick="switchAuthTab('login')">Вход</button>
+            <button type="button" class="auth-tab-btn" id="tabRegisterBtn" onclick="switchAuthTab('register')">Регистрация</button>
+        </div>
+
+        <div class="auth-body">
+            <!-- ФОРМА ВХОДА -->
+            <form id="loginForm" onsubmit="handleLogin(event)" novalidate>
+                <div id="loginAlert" class="alert-box hidden"></div>
+
+                <div class="form-group">
+                    <label for="loginIin">ИИН (12 цифр) *</label>
+                    <input
+                        type="text"
+                        id="loginIin"
+                        inputmode="numeric"
+                        maxlength="12"
+                        autocomplete="username"
+                        placeholder="Например: 950101400001"
+                        oninput="onDigitsOnlyInput(this, 12)"
+                    >
+                    <div class="field-hint">Введите 12 цифр вашего индивидуального идентификационного номера</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="loginPassword">Пароль *</label>
+                    <div class="password-wrap">
+                        <input
+                            type="password"
+                            id="loginPassword"
+                            autocomplete="current-password"
+                            placeholder="Введите пароль"
+                        >
+                        <button type="button" class="toggle-pass-btn" onclick="togglePasswordVisibility('loginPassword', this)" title="Показать/скрыть пароль">👁</button>
+                    </div>
+                </div>
+
+                <button type="submit" class="primary-btn" id="loginSubmitBtn">Войти в систему</button>
+
+                <div class="demo-quick-box">
+                    <div class="demo-quick-title">Демо-учётные записи (пароль: password)</div>
+                    <div class="demo-chips">
+                        <button type="button" class="demo-chip" onclick="fillDemoLogin('000000000001')">ADMIN (000000000001)</button>
+                        <button type="button" class="demo-chip" onclick="fillDemoLogin('950101400001')">Ирина · 01 Астана (INV)</button>
+                        <button type="button" class="demo-chip" onclick="fillDemoLogin('930303300003')">Олег · 01 Астана (SUP)</button>
+                        <button type="button" class="demo-chip" onclick="fillDemoLogin('940202300002')">Павел · 04 Актобе (INV)</button>
+                        <button type="button" class="demo-chip" onclick="fillDemoLogin('960404400004')">Анна · 04 Актобе (SUP)</button>
+                    </div>
+                </div>
+            </form>
+
+            <!-- ФОРМА РЕГИСТРАЦИИ -->
+            <form id="registerForm" class="hidden" onsubmit="handleRegisterInit(event)" novalidate>
+                <div id="registerAlert" class="alert-box hidden"></div>
+
+                <div class="form-grid-2">
+                    <div class="form-group">
+                        <label for="regLastName">Фамилия *</label>
+                        <input type="text" id="regLastName" maxlength="50" placeholder="Сериков">
+                    </div>
+                    <div class="form-group">
+                        <label for="regFirstName">Имя *</label>
+                        <input type="text" id="regFirstName" maxlength="50" placeholder="Арман">
+                    </div>
+                </div>
+
+                <div class="form-grid-2">
+                    <div class="form-group">
+                        <label for="regIin">ИИН (12 цифр) *</label>
+                        <input
+                            type="text"
+                            id="regIin"
+                            inputmode="numeric"
+                            maxlength="12"
+                            placeholder="980515300111"
+                            oninput="onRegisterIinInput(this)"
+                        >
+                        <div class="field-hint" id="regIinHint">Строго 12 цифр (ГГММДД...)</div>
+                    </div>
+                    <div class="form-group">
+                        <label for="regRole">Роль *</label>
+                        <select id="regRole">
+                            <option value="INVESTIGATOR">Следователь (INVESTIGATOR)</option>
+                            <option value="SUPPORT">Оператор (SUPPORT)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="regEmail">Электронная почта (Email) *</label>
+                    <input type="email" id="regEmail" maxlength="150" placeholder="arman.serikov@tracedesk.kz">
+                </div>
+
+                <div class="form-group">
+                    <label for="regPassword">Пароль *</label>
+                    <div class="password-wrap">
+                        <input
+                            type="password"
+                            id="regPassword"
+                            autocomplete="new-password"
+                            placeholder="Минимум 8 символов (A-z, 0-9)"
+                            oninput="updatePasswordStrengthUI(this.value)"
+                        >
+                        <button type="button" class="toggle-pass-btn" onclick="togglePasswordVisibility('regPassword', this)" title="Показать/скрыть пароль">👁</button>
+                    </div>
+                    <!-- Визуальная полоска-индикатор надежности пароля -->
+                    <div class="strength-box">
+                        <div class="strength-track">
+                            <div class="strength-fill" id="passwordStrengthFill"></div>
+                        </div>
+                        <div class="strength-meta empty" id="passwordStrengthMeta">
+                            <span id="passwordStrengthLabel">Введите пароль для оценки надёжности</span>
+                            <span id="passwordStrengthRatio"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="regRegion">Регион РК *</label>
+                    <select id="regRegion">
+                        <option value="">Загрузка регионов...</option>
+                    </select>
+                </div>
+
+                <div class="form-grid-2">
+                    <div class="form-group">
+                        <label for="regDepartment">Следственное управление *</label>
+                        <select id="regDepartment">
+                            <option value="">Загрузка...</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="regPosition">Должность *</label>
+                        <select id="regPosition">
+                            <option value="">Загрузка...</option>
+                        </select>
+                    </div>
+                </div>
+
+                <button type="submit" class="primary-btn" id="regSubmitBtn">Продолжить</button>
+            </form>
         </div>
     </div>
-
-    <!-- Кнопка профиля в правом верхнем углу -->
-    <div class="profile-wrapper">
-        <button class="profile-btn" onclick="toggleDropdown(event)">
-            <img id="activeAvatar" class="avatar-img" src="" alt="avatar">
-            <div class="profile-text">
-                <div class="profile-name" id="activeName">Олег Смирнов</div>
-                <span class="role-tag SUPPORT" id="activeRoleBadge">SUPPORT</span>
-            </div>
-            <span class="chevron-icon">⌄</span>
-        </button>
-
-        <!-- Выпадающий список аккаунтов -->
-        <div class="profile-dropdown" id="profileDropdown">
-            <div class="dropdown-header">Сменить аккаунт (Демо)</div>
-            <div id="accountList"></div>
-        </div>
-    </div>
-</header>
-
-<!-- РАБОЧАЯ ОБЛАСТЬ -->
-<div class="workspace">
-    <!-- Левая карточка: Tickets -->
-    <aside class="tickets-panel">
-        <div class="tickets-header">
-            <div class="tickets-title-row">
-                <span class="tickets-title">Tickets</span>
-                <button class="new-ticket-btn" id="newTicketBtn" onclick="openModal()">+ Создать</button>
-            </div>
-            <div class="tabs-row" id="tabsRow">
-                <button class="tab-btn active" onclick="setFilter('ALL', this)">Все</button>
-                <button class="tab-btn" onclick="setFilter('OPEN', this)">OPEN</button>
-                <button class="tab-btn" onclick="setFilter('IN_PROGRESS', this)">IN_PROGRESS</button>
-                <button class="tab-btn" onclick="setFilter('CLOSED', this)">CLOSED</button>
-            </div>
-        </div>
-        <div class="tickets-list" id="ticketsList"></div>
-        <div class="pagination-bar" id="paginationBar"></div>
-    </aside>
-
-    <!-- Правая карточка: Детали обращения -->
-    <main class="detail-panel" id="detailPanel"></main>
 </div>
 
-<!-- Модальное окно создания тикета -->
-<div class="modal-backdrop" id="createModal">
+<!-- ==================== 2. ОСНОВНОЕ ПРИЛОЖЕНИЕ (ПОСЛЕ ВХОДА) ==================== -->
+<div class="app-shell hidden" id="appShell">
+    <header class="navbar">
+        <div class="brand">
+            <div class="brand-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#1d4ed8" stroke-width="2">
+                    <rect x="3" y="3" width="18" height="12" rx="2"/>
+                    <path d="M2 19h20M8 15v4M16 15v4"/>
+                </svg>
+            </div>
+            <div>
+                <div class="brand-title">TraceDesk</div>
+                <div class="brand-subtitle" id="navSubtitle">Техподдержка</div>
+            </div>
+        </div>
+
+        <!-- Переключатель разделов для ADMIN -->
+        <div class="nav-center hidden" id="adminNavSwitch">
+            <button type="button" class="nav-switch-btn active" id="navAdminBtn" onclick="switchMainView('admin')">
+                Панель администратора
+                <span class="count-pill hidden" id="navPendingBadge">0</span>
+            </button>
+            <button type="button" class="nav-switch-btn" id="navTicketsBtn" onclick="switchMainView('tickets')">
+                Все обращения
+            </button>
+        </div>
+
+        <!-- Профиль текущего пользователя -->
+        <div class="profile-wrapper">
+            <button type="button" class="profile-btn" onclick="toggleProfileDropdown(event)">
+                <div class="avatar-circle" id="activeAvatar">TD</div>
+                <div class="profile-text">
+                    <div class="profile-name" id="activeName">—</div>
+                    <span class="role-tag" id="activeRoleBadge">—</span>
+                </div>
+                <span class="chevron-icon">⌄</span>
+            </button>
+
+            <div class="profile-dropdown" id="profileDropdown">
+                <div class="dropdown-profile-card" id="profileDropdownInfo"></div>
+                <button type="button" class="dropdown-logout-btn" onclick="logout()">Выйти из аккаунта</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- РАБОЧАЯ ОБЛАСТЬ ТИКЕТОВ -->
+    <div class="workspace hidden" id="ticketsWorkspace">
+        <aside class="tickets-panel">
+            <div class="tickets-header">
+                <div class="tickets-title-row">
+                    <span class="tickets-title">Обращения</span>
+                    <button type="button" class="new-ticket-btn hidden" id="newTicketBtn" onclick="openCreateTicketModal()">+ Создать</button>
+                </div>
+                <div class="admin-ticket-region-filter hidden" id="adminTicketRegionWrap">
+                    <select id="adminTicketRegionSelect" onchange="onAdminTicketRegionChange()">
+                        <option value="">Все регионы РК</option>
+                    </select>
+                </div>
+                <div class="tabs-row" id="tabsRow">
+                    <button type="button" class="tab-btn active" onclick="setTicketFilter('ALL', this)">Все</button>
+                    <button type="button" class="tab-btn" onclick="setTicketFilter('OPEN', this)">OPEN</button>
+                    <button type="button" class="tab-btn" onclick="setTicketFilter('IN_PROGRESS', this)">IN_PROGRESS</button>
+                    <button type="button" class="tab-btn" onclick="setTicketFilter('CLOSED', this)">CLOSED</button>
+                </div>
+            </div>
+            <div class="tickets-list" id="ticketsList"></div>
+            <div class="pagination-bar" id="paginationBar"></div>
+        </aside>
+
+        <main class="detail-panel" id="detailPanel"></main>
+    </div>
+
+    <!-- ПАНЕЛЬ АДМИНИСТРАТОРА -->
+    <div class="admin-workspace hidden" id="adminWorkspace">
+        <div class="admin-subtabs">
+            <div class="admin-subtabs-left">
+                <button type="button" class="admin-subtab-btn active" id="adminTabPendingBtn" onclick="switchAdminTab('pending')">
+                    Заявки на регистрацию
+                    <span class="count-pill hidden" id="adminTabPendingBadge">0</span>
+                </button>
+                <button type="button" class="admin-subtab-btn" id="adminTabUsersBtn" onclick="switchAdminTab('users')">
+                    Пользователи
+                </button>
+            </div>
+            <button type="button" class="action-pill-btn sm" onclick="refreshAdminData()">Обновить</button>
+        </div>
+
+        <!-- Вкладка 1: Заявки на регистрацию (PENDING_APPROVAL) -->
+        <div class="admin-pending-grid" id="adminPendingView">
+            <aside class="admin-card">
+                <div class="admin-card-header">
+                    <span class="admin-card-title">Ожидают одобрения</span>
+                    <span class="region-tag" id="pendingCountText">0</span>
+                </div>
+                <div class="pending-list" id="pendingList"></div>
+            </aside>
+
+            <main class="admin-card" id="pendingDetailCard"></main>
+        </div>
+
+        <!-- Вкладка 2: Пользователи -->
+        <div class="admin-card hidden" id="adminUsersView" style="flex:1;">
+            <div class="admin-card-header">
+                <span class="admin-card-title">Сотрудники (Следователи и Операторы)</span>
+                <span class="region-tag" id="usersCountText">0</span>
+            </div>
+            <div class="users-filters">
+                <select id="filterUserRole" onchange="loadAdminUsers()">
+                    <option value="">Все роли</option>
+                    <option value="INVESTIGATOR">Следователи (INVESTIGATOR)</option>
+                    <option value="SUPPORT">Операторы (SUPPORT)</option>
+                </select>
+                <select id="filterUserRegion" onchange="loadAdminUsers()">
+                    <option value="">Все регионы</option>
+                </select>
+                <select id="filterUserStatus" onchange="loadAdminUsers()">
+                    <option value="">Все статусы</option>
+                    <option value="ACTIVE">ACTIVE</option>
+                    <option value="PENDING_APPROVAL">PENDING_APPROVAL</option>
+                    <option value="BLOCKED">BLOCKED</option>
+                    <option value="REJECTED">REJECTED</option>
+                </select>
+            </div>
+            <div class="users-table-wrap">
+                <table class="users-table">
+                    <thead>
+                    <tr>
+                        <th>Сотрудник / ИИН / Email</th>
+                        <th>Роль</th>
+                        <th>Регион</th>
+                        <th>Управление и должность</th>
+                        <th>Статус</th>
+                        <th>Действия</th>
+                    </tr>
+                    </thead>
+                    <tbody id="adminUsersTbody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ==================== МОДАЛЬНОЕ ОКНО OTP ==================== -->
+<div class="modal-backdrop" id="otpModal">
     <div class="modal">
-        <h3 style="margin-bottom: 16px;">Создать обращение</h3>
+        <div class="modal-title">Подтверждение электронной почты</div>
+        <div class="modal-subtitle">
+            Мы отправили 6-значный код подтверждения на почту:<br>
+            <span class="otp-email-pill" id="otpEmailDisplay" style="margin-top:6px;">—</span>
+        </div>
+
+        <div id="otpAlert" class="alert-box hidden"></div>
+
         <div class="form-group">
-            <label>Тема обращения *</label>
+            <label for="otpCodeInput">Код подтверждения (6 цифр)</label>
+            <input
+                type="text"
+                id="otpCodeInput"
+                class="otp-input"
+                inputmode="numeric"
+                maxlength="6"
+                autocomplete="one-time-code"
+                placeholder="000000"
+                oninput="onOtpInput(this)"
+            >
+            <div class="field-hint" id="otpStatusHint">После ввода 6 цифр код будет проверен автоматически через 1 секунду</div>
+        </div>
+
+        <div class="otp-footer-actions">
+            <button type="button" class="resend-btn" id="otpResendBtn" onclick="resendOtpCode()" disabled>
+                Отправить код повторно (60 с)
+            </button>
+            <div class="field-hint" id="otpResendsHint" style="text-align:center;"></div>
+            <button type="button" class="action-pill-btn" onclick="closeOtpModal(false)" style="width:100%;">
+                Отмена / изменить почту
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- ==================== МОДАЛЬНОЕ ОКНО СОЗДАНИЯ ТИКЕТА ==================== -->
+<div class="modal-backdrop" id="createTicketModal">
+    <div class="modal">
+        <div class="modal-title">Создать обращение</div>
+        <div class="modal-subtitle">Обращение автоматически направится операторам вашего региона.</div>
+        <div class="form-group">
+            <label for="newTitle">Тема обращения *</label>
             <input type="text" id="newTitle" placeholder="Не скачивается PDF">
         </div>
         <div class="form-group">
-            <label>Описание проблемы *</label>
+            <label for="newDesc">Описание проблемы *</label>
             <textarea id="newDesc" rows="3" placeholder="Опишите проблему..."></textarea>
         </div>
         <div class="form-group">
-            <label>Скриншот (PNG / JPEG до 5 МБ)</label>
+            <label for="newFile">Скриншот (PNG / JPEG до 5 МБ)</label>
             <input type="file" id="newFile" accept="image/png,image/jpeg">
         </div>
         <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:16px;">
-            <button class="action-pill-btn" onclick="closeModal()">Отмена</button>
-            <button class="send-btn" onclick="createTicket()">Создать</button>
+            <button type="button" class="action-pill-btn" onclick="closeCreateTicketModal()">Отмена</button>
+            <button type="button" class="send-btn" onclick="createTicket()">Создать</button>
         </div>
     </div>
 </div>
 
-<!-- Тост уведомлений справа внизу -->
+<!-- ==================== МОДАЛЬНОЕ ОКНО РЕДАКТИРОВАНИЯ СОТРУДНИКА ==================== -->
+<div class="modal-backdrop" id="editUserModal">
+    <div class="modal">
+        <div class="modal-title">Редактировать профиль сотрудника</div>
+        <div class="modal-subtitle" id="editUserSubtitle">—</div>
+        <div id="editUserAlert" class="alert-box hidden"></div>
+
+        <input type="hidden" id="editUserId">
+
+        <div class="form-grid-2">
+            <div class="form-group">
+                <label for="editLastName">Фамилия *</label>
+                <input type="text" id="editLastName" maxlength="50">
+            </div>
+            <div class="form-group">
+                <label for="editFirstName">Имя *</label>
+                <input type="text" id="editFirstName" maxlength="50">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="editRole">Роль *</label>
+            <select id="editRole">
+                <option value="INVESTIGATOR">Следователь (INVESTIGATOR)</option>
+                <option value="SUPPORT">Оператор (SUPPORT)</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="editRegion">Регион РК *</label>
+            <select id="editRegion"></select>
+        </div>
+
+        <div class="form-group">
+            <label for="editDepartment">Следственное управление</label>
+            <select id="editDepartment"></select>
+        </div>
+
+        <div class="form-group">
+            <label for="editPosition">Должность</label>
+            <select id="editPosition"></select>
+        </div>
+
+        <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:16px;">
+            <button type="button" class="action-pill-btn" onclick="closeEditUserModal()">Отмена</button>
+            <button type="button" class="send-btn" id="editUserSaveBtn" onclick="saveEditedUser()">Сохранить</button>
+        </div>
+    </div>
+</div>
+
+<!-- ТОСТЫ УВЕДОМЛЕНИЙ -->
 <div class="toast-container" id="toastContainer"></div>
 
 <script>
-    // SVG-портреты для 4 демо-аккаунтов (выглядят аккуратно и работают без интернета)
-    const AVATARS = {
-        irina: "data:image/svg+xml;utf8," + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80"><rect width="80" height="80" fill="#dbeafe"/><circle cx="40" cy="30" r="15" fill="#f5d0c5"/><path d="M20 75 C20 53 60 53 60 75" fill="#334155"/><path d="M23 30 C23 12 57 12 57 30 C57 42 54 48 50 48 C50 32 30 32 30 48 C26 48 23 42 23 30Z" fill="#3b2314"/></svg>`),
-        pavel: "data:image/svg+xml;utf8," + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80"><rect width="80" height="80" fill="#e2e8f0"/><circle cx="40" cy="31" r="15" fill="#f1c6b8"/><path d="M18 76 C18 54 62 54 62 76" fill="#1e293b"/><path d="M25 25 C25 14 55 14 55 25 C52 20 28 20 25 25Z" fill="#271c15"/></svg>`),
-        oleg:  "data:image/svg+xml;utf8," + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80"><rect width="80" height="80" fill="#dbeafe"/><circle cx="40" cy="31" r="15" fill="#f3c6b6"/><path d="M18 76 C18 54 62 54 62 76" fill="#64748b"/><path d="M25 24 C25 13 55 13 55 24 C50 19 30 19 25 24Z" fill="#1e1b18"/></svg>`),
-        anna:  "data:image/svg+xml;utf8," + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80"><rect width="80" height="80" fill="#ede9fe"/><circle cx="40" cy="30" r="15" fill="#f5d0c5"/><path d="M20 75 C20 53 60 53 60 75" fill="#475569"/><path d="M23 30 C23 12 57 12 57 30 C57 42 54 48 50 48 C50 32 30 32 30 48 C26 48 23 42 23 30Z" fill="#4a2511"/></svg>`)
+    const AUTH_STORAGE_KEY = 'tracedesk_auth_session_v1';
+    const PAGE_SIZE = 10;
+
+    // Справочники из БД (/api/dictionaries/*)
+    let dictionaries = {
+        regions: [],
+        departments: [],
+        positions: []
     };
 
-    const ACCOUNTS = [
-        { username: 'irina', password: 'password', fullName: 'Ирина Соколова', shortName: 'Ирина', title: 'Следователь', role: 'INVESTIGATOR' },
-        { username: 'pavel', password: 'password', fullName: 'Павел Морозов',  shortName: 'Павел', title: 'Следователь', role: 'INVESTIGATOR' },
-        { username: 'oleg',  password: 'password', fullName: 'Олег Смирнов',   shortName: 'Олег',  title: 'Оператор',    role: 'SUPPORT' },
-        { username: 'anna',  password: 'password', fullName: 'Анна Волкова',   shortName: 'Анна',  title: 'Оператор',    role: 'SUPPORT' }
-    ];
+    // Текущая сессия
+    let authState = {
+        basicToken: null,
+        loginIin: null,
+        user: null
+    };
 
-    const PAGE_SIZE = 10;
-    let currentAccount = ACCOUNTS[2]; // По умолчанию Олег Смирнов (SUPPORT)
-    let currentFilter = 'ALL';
+    // Состояние тикетов
+    let currentMainView = 'tickets'; // 'tickets' | 'admin'
+    let currentTicketFilter = 'ALL';
+    let currentTicketRegionFilter = '';
     let currentPage = 0;
     let totalPages = 1;
     let totalElements = 0;
-    let selectedTicketId = 1;
-    let backendOnline = false;
+    let selectedTicketId = null;
 
-    const INITIAL_TICKETS = [
-        {
-            id: 1,
-            ticketNumber: 'TD-00001',
-            title: 'Не скачивается PDF',
-            description: 'При попытке скачать материалы дела в формате PDF возникает ошибка формирования документа.',
-            status: 'IN_PROGRESS',
-            authorUsername: 'irina',
-            authorFullName: 'Ирина',
-            assigneeUsername: 'oleg',
-            assigneeFullName: 'Олег Смирнов',
-            attachmentName: 'error.png',
-            attachmentType: 'PNG',
-            attachmentSize: 145408,
-            createdAt: '09.11.2026',
-            replies: [
-                { id: 1, authorUsername: 'oleg', authorFullName: 'Олег', message: 'Проверьте доступ к материалам дела', createdAt: '09.11.2026' }
-            ],
-            history: [
-                { oldStatus: null, newStatus: 'OPEN', changedByFullName: 'Ирина Соколова', changedAt: '09.11.2026 15:10' },
-                { oldStatus: 'OPEN', newStatus: 'IN_PROGRESS', changedByFullName: 'Олег Смирнов', changedAt: '09.11.2026 15:18' }
-            ]
-        },
-        {
-            id: 2,
-            ticketNumber: 'TD-00002',
-            title: 'Доступ к архиву',
-            description: 'Не открывается раздел архивных дел за прошлый квартал.',
-            status: 'OPEN',
-            authorUsername: 'irina',
-            authorFullName: 'Ирина',
-            assigneeUsername: null,
-            assigneeFullName: null,
-            attachmentName: null,
-            attachmentType: null,
-            attachmentSize: null,
-            createdAt: '10.11.2026',
-            replies: [],
-            history: [
-                { oldStatus: null, newStatus: 'OPEN', changedByFullName: 'Ирина Соколова', changedAt: '10.11.2026 10:05' }
-            ]
-        },
-        {
-            id: 3,
-            ticketNumber: 'TD-00003',
-            title: 'Сброс пароля',
-            description: 'Требуется обновить временный пароль учётной записи.',
-            status: 'OPEN',
-            authorUsername: 'irina',
-            authorFullName: 'Ирина',
-            assigneeUsername: null,
-            assigneeFullName: null,
-            attachmentName: null,
-            attachmentType: null,
-            attachmentSize: null,
-            createdAt: '10.11.2026',
-            replies: [],
-            history: [
-                { oldStatus: null, newStatus: 'OPEN', changedByFullName: 'Ирина Соколова', changedAt: '10.11.2026 11:20' }
-            ]
-        }
-    ];
+    // Состояние админки
+    let currentAdminTab = 'pending'; // 'pending' | 'users'
+    let pendingRegistrations = [];
+    let selectedPendingId = null;
+    let adminUsersList = [];
 
-    function authHeader() {
-        return { 'Authorization': 'Basic ' + btoa(currentAccount.username + ':' + currentAccount.password) };
+    // Состояние OTP модалки
+    let otpState = {
+        email: '',
+        autoSubmitTimer: null,
+        cooldownTimer: null,
+        cooldownSeconds: 0,
+        remainingResends: 3,
+        submitting: false,
+        attemptsExhausted: false
+    };
+
+    // ==================== УТИЛИТЫ ====================
+    function escapeHtml(value) {
+        if (value === null || value === undefined) return '';
+        return String(value)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
     }
 
-    function getLocalTickets() {
-        const raw = localStorage.getItem('tracedesk_v3_tickets');
-        if (!raw) {
-            localStorage.setItem('tracedesk_v3_tickets', JSON.stringify(INITIAL_TICKETS));
-            return INITIAL_TICKETS;
-        }
-        return JSON.parse(raw);
+    function encodeBasicAuth(login, password) {
+        const bytes = new TextEncoder().encode(login + ':' + password);
+        let binary = '';
+        bytes.forEach(b => { binary += String.fromCharCode(b); });
+        return btoa(binary);
     }
 
-    function saveLocalTickets(list) {
-        localStorage.setItem('tracedesk_v3_tickets', JSON.stringify(list));
-    }
-
-    async function init() {
-        const saved = sessionStorage.getItem('tracedesk_user');
-        if (saved) {
-            const acc = ACCOUNTS.find(a => a.username === saved);
-            if (acc) currentAccount = acc;
+    function authHeaders(extra = {}) {
+        const headers = { ...extra };
+        if (authState.basicToken) {
+            headers['Authorization'] = 'Basic ' + authState.basicToken;
         }
-
-        window.addEventListener('click', () => {
-            document.getElementById('profileDropdown').classList.remove('open');
-        });
-
-        await detectBackend();
-        renderHeader();
-        await renderAll();
-
-        // Показываем демо-тост 409 при первом открытии, как на макете
-        showToast('error', '409 Conflict — CLOSE_WITHOUT_REPLY:', 'Нельзя закрыть обращение без ответа оператора');
-    }
-
-    async function detectBackend() {
-        if (window.location.protocol.startsWith('http')) {
-            try {
-                const res = await fetch('/tickets?page=0&size=1', { headers: authHeader() });
-                if (res.ok || res.status === 401 || res.status === 403) {
-                    backendOnline = true;
-                }
-            } catch (_) {}
-        }
+        return headers;
     }
 
     function formatDate(iso) {
-        if (!iso) return '';
+        if (!iso) return '—';
         try {
             const d = new Date(iso);
             if (isNaN(d.getTime())) return iso;
-            return d.toLocaleString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+            return d.toLocaleString('ru-RU', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
         } catch (_) {
             return iso;
         }
     }
 
-    function toggleDropdown(e) {
+    function getInitials(fullName) {
+        if (!fullName) return 'TD';
+        const parts = fullName.trim().split(/\s+/).filter(Boolean);
+        if (parts.length >= 2) {
+            return (parts[0][0] + parts[1][0]).toUpperCase();
+        }
+        return fullName.slice(0, 2).toUpperCase();
+    }
+
+    function showBoxAlert(elementId, type, htmlMessage) {
+        const el = document.getElementById(elementId);
+        if (!el) return;
+        const icons = { error: '⚠', warning: '⏳', success: '✓', info: 'ℹ' };
+        el.className = 'alert-box ' + type;
+        el.innerHTML = `<span style="font-size:16px; line-height:1.2;">${icons[type] || 'ℹ'}</span><div>${htmlMessage}</div>`;
+        el.classList.remove('hidden');
+    }
+
+    function hideBoxAlert(elementId) {
+        const el = document.getElementById(elementId);
+        if (el) el.classList.add('hidden');
+    }
+
+    function showToast(type, title, message) {
+        const container = document.getElementById('toastContainer');
+        const el = document.createElement('div');
+        el.className = 'toast-dark ' + (type === 'success' ? 'success' : '');
+        el.innerHTML = `
+            <div class="toast-warn-icon">${type === 'success' ? '✓' : '⚠'}</div>
+            <div>
+                <div class="toast-title">${escapeHtml(title)}</div>
+                <div class="toast-desc">${escapeHtml(message)}</div>
+            </div>
+            <button type="button" class="toast-close" onclick="this.parentElement.remove()">✕</button>
+        `;
+        container.appendChild(el);
+        setTimeout(() => {
+            if (el.parentElement) el.remove();
+        }, 6500);
+    }
+
+    function togglePasswordVisibility(inputId, btn) {
+        const input = document.getElementById(inputId);
+        if (!input) return;
+        if (input.type === 'password') {
+            input.type = 'text';
+            btn.textContent = '🙈';
+        } else {
+            input.type = 'password';
+            btn.textContent = '👁';
+        }
+    }
+
+    function onDigitsOnlyInput(input, maxLen) {
+        const cleaned = input.value.replace(/\D/g, '').slice(0, maxLen);
+        if (input.value !== cleaned) {
+            input.value = cleaned;
+        }
+    }
+
+    // ==================== ВАЛИДАЦИЯ ИИН И НАДЁЖНОСТИ ПАРОЛЯ ====================
+    function isValidIinFormat(iin) {
+        if (!/^\d{12}$/.test(iin)) return { valid: false, reason: 'ИИН должен состоять ровно из 12 цифр' };
+        const yy = parseInt(iin.slice(0, 2), 10);
+        const mm = parseInt(iin.slice(2, 4), 10);
+        const dd = parseInt(iin.slice(4, 6), 10);
+        const centuryDigit = parseInt(iin[6], 10);
+        let centuryBase;
+        if (centuryDigit === 1 || centuryDigit === 2) centuryBase = 1800;
+        else if (centuryDigit === 3 || centuryDigit === 4) centuryBase = 1900;
+        else if (centuryDigit === 5 || centuryDigit === 6) centuryBase = 2000;
+        else centuryBase = yy === 0 ? 2000 : 1900;
+
+        const year = centuryBase + yy;
+        const date = new Date(year, mm - 1, dd);
+        const dateValid = date.getFullYear() === year && date.getMonth() === mm - 1 && date.getDate() === dd;
+        if (!dateValid) {
+            return { valid: false, reason: 'Некорректная дата рождения в первых 6 цифрах ИИН (ГГММДД)' };
+        }
+        return { valid: true, reason: 'Формат ИИН корректен (12 цифр)' };
+    }
+
+    function onRegisterIinInput(input) {
+        onDigitsOnlyInput(input, 12);
+        const val = input.value;
+        const hint = document.getElementById('regIinHint');
+        if (!val) {
+            hint.className = 'field-hint';
+            hint.textContent = 'Строго 12 цифр (ГГММДД...)';
+            input.classList.remove('input-invalid');
+            return;
+        }
+        if (val.length < 12) {
+            hint.className = 'field-hint';
+            hint.textContent = `Введено ${val.length} из 12 цифр`;
+            input.classList.remove('input-invalid');
+            return;
+        }
+        const check = isValidIinFormat(val);
+        hint.className = 'field-hint ' + (check.valid ? 'success' : 'error');
+        hint.textContent = check.reason;
+        input.classList.toggle('input-invalid', !check.valid);
+    }
+
+    function evaluatePasswordStrength(password) {
+        if (!password) return 'EMPTY';
+        const hasLower = /[a-zа-яё]/.test(password);
+        const hasUpper = /[A-ZА-ЯЁ]/.test(password);
+        const hasDigit = /\d/.test(password);
+        const isValid = password.length >= 8 && hasLower && hasUpper && hasDigit;
+        if (!isValid) return 'WEAK';
+        const hasSpecial = /[^A-Za-zА-Яа-яЁё0-9\s]/.test(password);
+        if (password.length >= 10 && hasSpecial) return 'STRONG';
+        return 'MEDIUM';
+    }
+
+    function updatePasswordStrengthUI(password) {
+        const fill = document.getElementById('passwordStrengthFill');
+        const meta = document.getElementById('passwordStrengthMeta');
+        const label = document.getElementById('passwordStrengthLabel');
+        const ratio = document.getElementById('passwordStrengthRatio');
+
+        const level = evaluatePasswordStrength(password);
+        if (level === 'EMPTY') {
+            fill.className = 'strength-fill';
+            meta.className = 'strength-meta empty';
+            label.textContent = 'Введите пароль для оценки надёжности';
+            ratio.textContent = '';
+        } else if (level === 'WEAK') {
+            fill.className = 'strength-fill weak';
+            meta.className = 'strength-meta weak';
+            label.textContent = 'Слабый пароль (нужно ≥8 симв., A-Z, a-z, 0-9)';
+            ratio.textContent = '1/3';
+        } else if (level === 'MEDIUM') {
+            fill.className = 'strength-fill medium';
+            meta.className = 'strength-meta medium';
+            label.textContent = 'Средний пароль (добавьте спецсимвол и ≥10 симв.)';
+            ratio.textContent = '2/3';
+        } else {
+            fill.className = 'strength-fill strong';
+            meta.className = 'strength-meta strong';
+            label.textContent = 'Надёжный пароль';
+            ratio.textContent = '3/3';
+        }
+    }
+
+    // ==================== ЗАГРУЗКА СПРАВОЧНИКОВ ====================
+    async function loadDictionaries() {
+        try {
+            const [regRes, depRes, posRes] = await Promise.all([
+                fetch('/api/dictionaries/regions'),
+                fetch('/api/dictionaries/departments'),
+                fetch('/api/dictionaries/positions')
+            ]);
+            if (regRes.ok) dictionaries.regions = await regRes.json();
+            if (depRes.ok) dictionaries.departments = await depRes.json();
+            if (posRes.ok) dictionaries.positions = await posRes.json();
+        } catch (err) {
+            showToast('error', 'Ошибка сети', 'Не удалось загрузить справочники с сервера');
+        }
+        populateDictionarySelects();
+    }
+
+    function populateDictionarySelects() {
+        const regionOptions = dictionaries.regions
+            .map(r => `<option value="${escapeHtml(r.id)}">${escapeHtml(r.id)} - ${escapeHtml(r.name)}</option>`)
+            .join('');
+        const deptOptions = dictionaries.departments
+            .map(d => `<option value="${escapeHtml(d.id)}">${escapeHtml(d.name)}</option>`)
+            .join('');
+        const posOptions = dictionaries.positions
+            .map(p => `<option value="${escapeHtml(p.id)}">${escapeHtml(p.name)}</option>`)
+            .join('');
+
+        // Регистрация
+        const regRegion = document.getElementById('regRegion');
+        if (regRegion) {
+            regRegion.innerHTML = `<option value="">Выберите регион РК...</option>` + regionOptions;
+        }
+        const regDept = document.getElementById('regDepartment');
+        if (regDept) {
+            regDept.innerHTML = `<option value="">Выберите управление...</option>` + deptOptions;
+        }
+        const regPos = document.getElementById('regPosition');
+        if (regPos) {
+            regPos.innerHTML = `<option value="">Выберите должность...</option>` + posOptions;
+        }
+
+        // Фильтры и редактирование в админке
+        const filterUserRegion = document.getElementById('filterUserRegion');
+        if (filterUserRegion) {
+            filterUserRegion.innerHTML = `<option value="">Все регионы</option>` + regionOptions;
+        }
+        const adminTicketRegion = document.getElementById('adminTicketRegionSelect');
+        if (adminTicketRegion) {
+            adminTicketRegion.innerHTML = `<option value="">Все регионы РК</option>` + regionOptions;
+        }
+        const editRegion = document.getElementById('editRegion');
+        if (editRegion) {
+            editRegion.innerHTML = regionOptions;
+        }
+        const editDept = document.getElementById('editDepartment');
+        if (editDept) {
+            editDept.innerHTML = `<option value="">— Не указано —</option>` + deptOptions;
+        }
+        const editPos = document.getElementById('editPosition');
+        if (editPos) {
+            editPos.innerHTML = `<option value="">— Не указана —</option>` + posOptions;
+        }
+    }
+
+    // ==================== АВТОРИЗАЦИЯ (ВХОД ПО ИИН) ====================
+    function switchAuthTab(tab) {
+        const isLogin = tab === 'login';
+        document.getElementById('tabLoginBtn').classList.toggle('active', isLogin);
+        document.getElementById('tabRegisterBtn').classList.toggle('active', !isLogin);
+        document.getElementById('loginForm').classList.toggle('hidden', !isLogin);
+        document.getElementById('registerForm').classList.toggle('hidden', isLogin);
+        if (isLogin) hideBoxAlert('registerAlert');
+        else hideBoxAlert('loginAlert');
+    }
+
+    function fillDemoLogin(iin) {
+        document.getElementById('loginIin').value = iin;
+        document.getElementById('loginPassword').value = 'password';
+        hideBoxAlert('loginAlert');
+    }
+
+    async function handleLogin(e) {
+        e.preventDefault();
+        hideBoxAlert('loginAlert');
+
+        const iin = document.getElementById('loginIin').value.trim();
+        const password = document.getElementById('loginPassword').value;
+
+        if (!/^\d{12}$/.test(iin)) {
+            showBoxAlert('loginAlert', 'error', 'Введите корректный ИИН — строго 12 цифр.');
+            return;
+        }
+        if (!password) {
+            showBoxAlert('loginAlert', 'error', 'Введите пароль.');
+            return;
+        }
+
+        const btn = document.getElementById('loginSubmitBtn');
+        btn.disabled = true;
+        btn.textContent = 'Проверка...';
+
+        try {
+            const token = encodeBasicAuth(iin, password);
+            const res = await fetch('/auth/me', {
+                headers: { 'Authorization': 'Basic ' + token }
+            });
+            const data = await res.json().catch(() => ({}));
+
+            if (!res.ok) {
+                if (res.status === 423 || data.code === 'ACCOUNT_LOCKED') {
+                    showBoxAlert('loginAlert', 'error', `<b>Вход заблокирован на 1 час:</b> ${escapeHtml(data.message || 'Превышено количество неверных попыток пароля')}`);
+                } else if (data.code === 'ACCOUNT_PENDING_APPROVAL') {
+                    showBoxAlert('loginAlert', 'warning', `<b>Заявка на рассмотрении:</b> ${escapeHtml(data.message || 'Ваша заявка еще находится на рассмотрении у администратора')}`);
+                } else if (data.code === 'ACCOUNT_BLOCKED') {
+                    showBoxAlert('loginAlert', 'error', `<b>Доступ закрыт:</b> ${escapeHtml(data.message || 'Доступ к системе заблокирован администратором')}`);
+                } else {
+                    showBoxAlert('loginAlert', 'error', escapeHtml(data.message || 'Неверный ИИН или пароль'));
+                }
+                return;
+            }
+
+            authState = {
+                basicToken: token,
+                loginIin: iin,
+                user: data
+            };
+            sessionStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify({
+                basicToken: token,
+                loginIin: iin
+            }));
+
+            document.getElementById('loginPassword').value = '';
+            enterApp();
+        } catch (err) {
+            showBoxAlert('loginAlert', 'error', 'Ошибка соединения с сервером.');
+        } finally {
+            btn.disabled = false;
+            btn.textContent = 'Войти в систему';
+        }
+    }
+
+    function logout() {
+        sessionStorage.removeItem(AUTH_STORAGE_KEY);
+        authState = { basicToken: null, loginIin: null, user: null };
+        selectedTicketId = null;
+        selectedPendingId = null;
+        document.getElementById('profileDropdown').classList.remove('open');
+        document.getElementById('appShell').classList.add('hidden');
+        document.getElementById('authScreen').classList.remove('hidden');
+        document.body.classList.remove('app-mode');
+        switchAuthTab('login');
+    }
+
+    // ==================== РЕГИСТРАЦИЯ + МОДАЛЬНОЕ ОКНО OTP ====================
+    async function handleRegisterInit(e) {
+        e.preventDefault();
+        hideBoxAlert('registerAlert');
+
+        const lastName = document.getElementById('regLastName').value.trim();
+        const firstName = document.getElementById('regFirstName').value.trim();
+        const iin = document.getElementById('regIin').value.trim();
+        const role = document.getElementById('regRole').value;
+        const email = document.getElementById('regEmail').value.trim();
+        const password = document.getElementById('regPassword').value;
+        const regionId = document.getElementById('regRegion').value;
+        const departmentIdRaw = document.getElementById('regDepartment').value;
+        const positionIdRaw = document.getElementById('regPosition').value;
+
+        if (!lastName || !firstName) {
+            showBoxAlert('registerAlert', 'error', 'Укажите фамилию и имя.');
+            return;
+        }
+        const iinCheck = isValidIinFormat(iin);
+        if (!iinCheck.valid) {
+            showBoxAlert('registerAlert', 'error', escapeHtml(iinCheck.reason));
+            return;
+        }
+        if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+            showBoxAlert('registerAlert', 'error', 'Укажите корректный адрес электронной почты.');
+            return;
+        }
+        if (evaluatePasswordStrength(password) === 'WEAK' || !password) {
+            showBoxAlert('registerAlert', 'error', 'Пароль должен содержать минимум 8 символов, заглавные и строчные буквы, а также цифры.');
+            return;
+        }
+        if (!regionId || !departmentIdRaw || !positionIdRaw) {
+            showBoxAlert('registerAlert', 'error', 'Выберите регион РК, следственное управление и должность.');
+            return;
+        }
+
+        const btn = document.getElementById('regSubmitBtn');
+        btn.disabled = true;
+        btn.textContent = 'Отправка кода...';
+
+        try {
+            const payload = {
+                firstName,
+                lastName,
+                iin,
+                email,
+                password,
+                role,
+                regionId,
+                departmentId: Number(departmentIdRaw),
+                positionId: Number(positionIdRaw)
+            };
+
+            const res = await fetch('/auth/register/init', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const data = await res.json().catch(() => ({}));
+
+            if (!res.ok) {
+                showBoxAlert('registerAlert', 'error', escapeHtml(data.message || 'Ошибка при инициализации регистрации'));
+                showToast('error', `${res.status} — ${data.code || 'ERROR'}`, data.message || 'Ошибка регистрации');
+                return;
+            }
+
+            openOtpModal(
+                data.email || email,
+                data.cooldownSeconds || 60,
+                data.remainingResends ?? 3
+            );
+        } catch (err) {
+            showBoxAlert('registerAlert', 'error', 'Ошибка сети при отправке заявки.');
+        } finally {
+            btn.disabled = false;
+            btn.textContent = 'Продолжить';
+        }
+    }
+
+    function openOtpModal(email, cooldownSeconds, remainingResends) {
+        clearOtpTimers();
+        otpState.email = email;
+        otpState.remainingResends = remainingResends;
+        otpState.submitting = false;
+        otpState.attemptsExhausted = false;
+
+        document.getElementById('otpEmailDisplay').textContent = email;
+        const input = document.getElementById('otpCodeInput');
+        input.value = '';
+        input.disabled = false;
+        hideBoxAlert('otpAlert');
+        document.getElementById('otpStatusHint').textContent = 'После ввода 6 цифр код будет проверен автоматически через 1 секунду';
+        updateOtpResendsHint();
+
+        document.getElementById('otpModal').classList.add('open');
+        startOtpCooldown(cooldownSeconds || 60);
+        setTimeout(() => input.focus(), 50);
+    }
+
+    function closeOtpModal(keepAlerts = false) {
+        clearOtpTimers();
+        otpState.submitting = false;
+        document.getElementById('otpModal').classList.remove('open');
+        if (!keepAlerts) {
+            hideBoxAlert('otpAlert');
+        }
+    }
+
+    function clearOtpTimers() {
+        if (otpState.autoSubmitTimer) {
+            clearTimeout(otpState.autoSubmitTimer);
+            otpState.autoSubmitTimer = null;
+        }
+        if (otpState.cooldownTimer) {
+            clearInterval(otpState.cooldownTimer);
+            otpState.cooldownTimer = null;
+        }
+    }
+
+    function startOtpCooldown(seconds) {
+        if (otpState.cooldownTimer) clearInterval(otpState.cooldownTimer);
+        otpState.cooldownSeconds = Math.max(0, seconds);
+        renderOtpResendButton();
+
+        if (otpState.cooldownSeconds > 0) {
+            otpState.cooldownTimer = setInterval(() => {
+                otpState.cooldownSeconds--;
+                if (otpState.cooldownSeconds <= 0) {
+                    otpState.cooldownSeconds = 0;
+                    clearInterval(otpState.cooldownTimer);
+                    otpState.cooldownTimer = null;
+                }
+                renderOtpResendButton();
+            }, 1000);
+        }
+    }
+
+    function renderOtpResendButton() {
+        const btn = document.getElementById('otpResendBtn');
+        if (!btn) return;
+        if (otpState.cooldownSeconds > 0) {
+            btn.disabled = true;
+            btn.textContent = `Отправить код повторно (${otpState.cooldownSeconds} с)`;
+        } else {
+            btn.disabled = false;
+            btn.textContent = 'Отправить код повторно';
+        }
+    }
+
+    function updateOtpResendsHint() {
+        const hint = document.getElementById('otpResendsHint');
+        if (!hint) return;
+        hint.textContent = `Доступно повторных отправок кода: ${otpState.remainingResends} из 3`;
+    }
+
+    function onOtpInput(input) {
+        onDigitsOnlyInput(input, 6);
+        if (otpState.autoSubmitTimer) {
+            clearTimeout(otpState.autoSubmitTimer);
+            otpState.autoSubmitTimer = null;
+        }
+
+        const val = input.value;
+        const statusHint = document.getElementById('otpStatusHint');
+
+        if (val.length === 6 && !otpState.submitting && !otpState.attemptsExhausted) {
+            statusHint.textContent = 'Код введён. Автоматическая отправка через 1 секунду...';
+            otpState.autoSubmitTimer = setTimeout(() => {
+                otpState.autoSubmitTimer = null;
+                verifyOtpCode();
+            }, 1000);
+        } else {
+            statusHint.textContent = 'После ввода 6 цифр код будет проверен автоматически через 1 секунду';
+        }
+    }
+
+    async function verifyOtpCode() {
+        if (otpState.submitting) return;
+        const input = document.getElementById('otpCodeInput');
+        const code = input.value.trim();
+        if (!/^\d{6}$/.test(code)) return;
+
+        otpState.submitting = true;
+        input.disabled = true;
+        document.getElementById('otpStatusHint').textContent = 'Проверка кода на сервере...';
+        hideBoxAlert('otpAlert');
+
+        try {
+            const res = await fetch('/auth/register/verify-otp', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    email: otpState.email,
+                    code: code
+                })
+            });
+            const data = await res.json().catch(() => ({}));
+
+            if (res.ok) {
+                closeOtpModal(false);
+                document.getElementById('registerForm').reset();
+                updatePasswordStrengthUI('');
+                document.getElementById('regIinHint').textContent = 'Строго 12 цифр (ГГММДД...)';
+                document.getElementById('regIinHint').className = 'field-hint';
+
+                switchAuthTab('login');
+                if (data.iin) {
+                    document.getElementById('loginIin').value = data.iin;
+                }
+                showBoxAlert(
+                    'loginAlert',
+                    'success',
+                    `<b>Почта подтверждена!</b> ${escapeHtml(data.message || 'Ваша заявка отправлена Администратору на рассмотрение. После одобрения вы получите уведомление на почту.')}`
+                );
+                showToast('success', 'Заявка отправлена', 'Почта подтверждена. Ожидайте одобрения администратора.');
+                return;
+            }
+
+            if (data.code === 'EMAIL_VERIFICATION_BLOCKED' || res.status === 429) {
+                closeOtpModal(false);
+                showBoxAlert(
+                    'registerAlert',
+                    'error',
+                    `<b>Почта заблокирована для подтверждения:</b> ${escapeHtml(data.message || 'Исчерпан лимит попыток и переотправок. Пожалуйста, укажите другую электронную почту.')}`
+                );
+                showToast('error', 'Лимит исчерпан', 'Укажите другую электронную почту для регистрации');
+                const emailInput = document.getElementById('regEmail');
+                emailInput.focus();
+                emailInput.select();
+                return;
+            }
+
+            if (data.code === 'OTP_ATTEMPTS_EXCEEDED') {
+                otpState.attemptsExhausted = true;
+                input.value = '';
+                input.disabled = true;
+                showBoxAlert('otpAlert', 'error', escapeHtml(data.message || 'Исчерпано 5 неверных попыток. Нажмите «Отправить код повторно», чтобы получить новый код.'));
+                document.getElementById('otpStatusHint').textContent = 'Запросите новый код кнопкой ниже';
+                return;
+            }
+
+            if (data.code === 'REGISTRATION_DRAFT_NOT_FOUND') {
+                closeOtpModal(false);
+                showBoxAlert('registerAlert', 'error', escapeHtml(data.message || 'Время действия кода истекло. Нажмите «Продолжить» ещё раз.'));
+                return;
+            }
+
+            // Неверный код (INVALID_OTP_CODE)
+            input.disabled = false;
+            input.value = '';
+            showBoxAlert('otpAlert', 'error', escapeHtml(data.message || 'Неверный код подтверждения'));
+            document.getElementById('otpStatusHint').textContent = 'Введите 6-значный код повторно';
+            input.focus();
+        } catch (err) {
+            input.disabled = false;
+            showBoxAlert('otpAlert', 'error', 'Ошибка сети при проверке кода.');
+        } finally {
+            otpState.submitting = false;
+        }
+    }
+
+    async function resendOtpCode() {
+        const btn = document.getElementById('otpResendBtn');
+        btn.disabled = true;
+        btn.textContent = 'Отправка...';
+        hideBoxAlert('otpAlert');
+
+        try {
+            const res = await fetch('/auth/register/resend-otp', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: otpState.email })
+            });
+            const data = await res.json().catch(() => ({}));
+
+            if (!res.ok) {
+                if (data.code === 'EMAIL_VERIFICATION_BLOCKED') {
+                    closeOtpModal(false);
+                    showBoxAlert(
+                        'registerAlert',
+                        'error',
+                        `<b>Лимит переотправок исчерпан:</b> ${escapeHtml(data.message || 'Исчерпаны 3 переотправки кода. Пожалуйста, введите другую электронную почту.')}`
+                    );
+                    showToast('error', 'Лимит переотправок исчерпан', 'Введите другую электронную почту');
+                    const emailInput = document.getElementById('regEmail');
+                    emailInput.focus();
+                    emailInput.select();
+                    return;
+                }
+
+                if (data.code === 'REGISTRATION_DRAFT_NOT_FOUND') {
+                    closeOtpModal(false);
+                    showBoxAlert('registerAlert', 'error', escapeHtml(data.message || 'Черновик регистрации истёк. Заполните форму повторно.'));
+                    return;
+                }
+
+                showBoxAlert('otpAlert', 'error', escapeHtml(data.message || 'Не удалось повторно отправить код'));
+                renderOtpResendButton();
+                return;
+            }
+
+            otpState.attemptsExhausted = false;
+            otpState.remainingResends = data.remainingResends ?? Math.max(0, otpState.remainingResends - 1);
+            updateOtpResendsHint();
+
+            const input = document.getElementById('otpCodeInput');
+            input.disabled = false;
+            input.value = '';
+            input.focus();
+
+            showBoxAlert('otpAlert', 'success', escapeHtml(data.message || 'Новый код отправлен на вашу почту'));
+            document.getElementById('otpStatusHint').textContent = 'После ввода 6 цифр код будет проверен автоматически через 1 секунду';
+            startOtpCooldown(data.cooldownSeconds || 60);
+        } catch (err) {
+            showBoxAlert('otpAlert', 'error', 'Ошибка сети при повторной отправке кода.');
+            renderOtpResendButton();
+        }
+    }
+
+    // ==================== ВХОД В ПРИЛОЖЕНИЕ И ШАПКА ====================
+    async function enterApp() {
+        document.getElementById('authScreen').classList.add('hidden');
+        document.getElementById('appShell').classList.remove('hidden');
+        document.body.classList.add('app-mode');
+
+        renderNavbar();
+
+        if (authState.user.role === 'ADMIN') {
+            document.getElementById('adminNavSwitch').classList.remove('hidden');
+            document.getElementById('adminTicketRegionWrap').classList.remove('hidden');
+            switchMainView('admin');
+        } else {
+            document.getElementById('adminNavSwitch').classList.add('hidden');
+            document.getElementById('adminTicketRegionWrap').classList.add('hidden');
+            switchMainView('tickets');
+        }
+    }
+
+    function renderNavbar() {
+        const u = authState.user;
+        const avatar = document.getElementById('activeAvatar');
+        avatar.textContent = getInitials(u.fullName);
+        avatar.className = 'avatar-circle ' + u.role;
+
+        document.getElementById('activeName').textContent = u.fullName || u.iin;
+        const roleEl = document.getElementById('activeRoleBadge');
+        roleEl.textContent = u.role;
+        roleEl.className = 'role-tag ' + u.role;
+
+        const subtitleEl = document.getElementById('navSubtitle');
+        if (u.role === 'ADMIN') {
+            subtitleEl.textContent = 'Администрирование РК';
+        } else if (u.region) {
+            subtitleEl.textContent = `${u.region.id} — ${u.region.name}`;
+        } else {
+            subtitleEl.textContent = 'Техподдержка';
+        }
+
+        const newBtn = document.getElementById('newTicketBtn');
+        if (newBtn) {
+            newBtn.classList.toggle('hidden', u.role !== 'INVESTIGATOR');
+        }
+
+        const profileInfo = document.getElementById('profileDropdownInfo');
+        profileInfo.innerHTML = `
+            <div><b>${escapeHtml(u.fullName)}</b></div>
+            <div>ИИН: <b>${escapeHtml(u.iin || '—')}</b></div>
+            <div>Email: <b>${escapeHtml(u.email || '—')}</b></div>
+            ${u.region ? `<div>Регион: <b>${escapeHtml(u.region.id)} - ${escapeHtml(u.region.name)}</b></div>` : ''}
+            ${u.department ? `<div>Управление: <b>${escapeHtml(u.department.name)}</b></div>` : ''}
+            ${u.position ? `<div>Должность: <b>${escapeHtml(u.position.name)}</b></div>` : ''}
+        `;
+    }
+
+    function toggleProfileDropdown(e) {
         e.stopPropagation();
         document.getElementById('profileDropdown').classList.toggle('open');
     }
 
-    async function switchAccount(username) {
-        currentAccount = ACCOUNTS.find(a => a.username === username);
-        sessionStorage.setItem('tracedesk_user', username);
-        currentPage = 0;
-        selectedTicketId = null;
-        document.getElementById('profileDropdown').classList.remove('open');
-        renderHeader();
-        await renderAll();
-    }
+    function switchMainView(view) {
+        currentMainView = view;
+        const isAdminView = view === 'admin' && authState.user.role === 'ADMIN';
 
-    function renderHeader() {
-        document.getElementById('activeAvatar').src = AVATARS[currentAccount.username];
-        document.getElementById('activeName').textContent = currentAccount.fullName;
+        document.getElementById('adminWorkspace').classList.toggle('hidden', !isAdminView);
+        document.getElementById('ticketsWorkspace').classList.toggle('hidden', isAdminView);
 
-        const roleEl = document.getElementById('activeRoleBadge');
-        roleEl.textContent = currentAccount.role;
-        roleEl.className = 'role-tag ' + currentAccount.role;
-
-        // Кнопка «+ Создать» доступна только следователям (INVESTIGATOR)
-        const newBtn = document.getElementById('newTicketBtn');
-        if (newBtn) {
-            newBtn.style.display = currentAccount.role === 'INVESTIGATOR' ? 'inline-block' : 'none';
+        const navAdminBtn = document.getElementById('navAdminBtn');
+        const navTicketsBtn = document.getElementById('navTicketsBtn');
+        if (navAdminBtn && navTicketsBtn) {
+            navAdminBtn.classList.toggle('active', isAdminView);
+            navTicketsBtn.classList.toggle('active', !isAdminView);
         }
 
-        document.getElementById('accountList').innerHTML = ACCOUNTS.map(acc => `
-            <div class="account-row ${acc.username === currentAccount.username ? 'active' : ''}" onclick="switchAccount('${acc.username}')">
-                <div class="check-col">${acc.username === currentAccount.username ? '✓' : ''}</div>
-                <img class="avatar-img" src="${AVATARS[acc.username]}" alt="">
-                <div class="account-meta">
-                    <div class="account-meta-name">${acc.fullName}</div>
-                    <div class="account-meta-sub">
-                        <span>${acc.title}</span>
-                        <span class="role-tag ${acc.role}">${acc.role}</span>
-                    </div>
+        if (isAdminView) {
+            refreshAdminData();
+        } else {
+            currentPage = 0;
+            selectedTicketId = null;
+            renderTicketsWorkspace();
+        }
+    }
+
+    // ==================== ПАНЕЛЬ АДМИНИСТРАТОРА ====================
+    function switchAdminTab(tab) {
+        currentAdminTab = tab;
+        const isPending = tab === 'pending';
+        document.getElementById('adminTabPendingBtn').classList.toggle('active', isPending);
+        document.getElementById('adminTabUsersBtn').classList.toggle('active', !isPending);
+        document.getElementById('adminPendingView').classList.toggle('hidden', !isPending);
+        document.getElementById('adminUsersView').classList.toggle('hidden', isPending);
+
+        if (isPending) {
+            loadPendingRegistrations();
+        } else {
+            loadAdminUsers();
+        }
+    }
+
+    async function refreshAdminData() {
+        await loadPendingRegistrations();
+        if (currentAdminTab === 'users') {
+            await loadAdminUsers();
+        }
+    }
+
+    async function loadPendingRegistrations() {
+        try {
+            const res = await fetch('/admin/registrations', { headers: authHeaders() });
+            if (res.status === 401) { logout(); return; }
+            if (!res.ok) {
+                const err = await res.json().catch(() => ({}));
+                showToast('error', 'Ошибка загрузки заявок', err.message || 'Не удалось получить список заявок');
+                return;
+            }
+            pendingRegistrations = await res.json();
+            updatePendingBadges(pendingRegistrations.length);
+            renderPendingList();
+
+            if (pendingRegistrations.length === 0) {
+                selectedPendingId = null;
+                renderPendingDetail(null);
+            } else {
+                const exists = pendingRegistrations.some(u => u.id === selectedPendingId);
+                if (!exists) selectedPendingId = pendingRegistrations[0].id;
+                await selectPendingUser(selectedPendingId);
+            }
+        } catch (err) {
+            showToast('error', 'Ошибка сети', 'Не удалось загрузить заявки на регистрацию');
+        }
+    }
+
+    function updatePendingBadges(count) {
+        const navBadge = document.getElementById('navPendingBadge');
+        const tabBadge = document.getElementById('adminTabPendingBadge');
+        const countText = document.getElementById('pendingCountText');
+
+        if (countText) countText.textContent = String(count);
+        [navBadge, tabBadge].forEach(b => {
+            if (!b) return;
+            b.textContent = String(count);
+            b.classList.toggle('hidden', count <= 0);
+        });
+    }
+
+    function renderPendingList() {
+        const listEl = document.getElementById('pendingList');
+        if (!pendingRegistrations.length) {
+            listEl.innerHTML = `<div style="padding:28px 16px; text-align:center; color:#64748b; font-size:13.5px;">Нет новых заявок на регистрацию</div>`;
+            return;
+        }
+
+        listEl.innerHTML = pendingRegistrations.map(u => `
+            <div class="pending-item ${u.id === selectedPendingId ? 'selected' : ''}" onclick="selectPendingUser(${u.id})">
+                <div style="display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:6px;">
+                    <span style="font-weight:700; font-size:14.5px; color:#0f172a;">${escapeHtml(u.fullName)}</span>
+                    <span class="role-tag ${escapeHtml(u.role)}">${escapeHtml(u.role)}</span>
+                </div>
+                <div style="font-size:12.5px; color:#475569; margin-bottom:4px;">ИИН: <b>${escapeHtml(u.iin)}</b></div>
+                <div style="font-size:12.5px; color:#64748b; display:flex; justify-content:space-between; gap:8px;">
+                    <span>${u.region ? escapeHtml(u.region.id + ' - ' + u.region.name) : '—'}</span>
+                    <span>${escapeHtml(formatDate(u.createdAt))}</span>
                 </div>
             </div>
         `).join('');
     }
 
-    async function setFilter(filter, btn) {
-        currentFilter = filter;
+    async function selectPendingUser(userId) {
+        selectedPendingId = userId;
+        renderPendingList();
+
+        let user = pendingRegistrations.find(u => u.id === userId) || null;
+        try {
+            const res = await fetch(`/admin/users/${userId}`, { headers: authHeaders() });
+            if (res.ok) {
+                user = await res.json();
+            }
+        } catch (_) {}
+
+        renderPendingDetail(user);
+    }
+
+    function renderPendingDetail(u) {
+        const card = document.getElementById('pendingDetailCard');
+        if (!u) {
+            card.innerHTML = `
+                <div style="padding:56px 24px; text-align:center; color:#64748b;">
+                    <h3 style="color:#0f172a; margin-bottom:8px;">Нет выбранной заявки</h3>
+                    <p style="font-size:14px;">Все заявки на регистрацию обработаны.</p>
+                </div>`;
+            return;
+        }
+
+        card.innerHTML = `
+            <div class="detail-top">
+                <div>
+                    <div class="detail-heading">${escapeHtml(u.fullName)}</div>
+                    <div class="detail-sub-row">
+                        <span class="badge ${escapeHtml(u.status)}">${escapeHtml(u.status)}</span>
+                        <span class="role-tag ${escapeHtml(u.role)}">${escapeHtml(u.role)}</span>
+                        <span style="font-size:13px; color:#64748b;">Подана: ${escapeHtml(formatDate(u.createdAt))}</span>
+                    </div>
+                </div>
+                <div class="top-actions">
+                    <button type="button" class="action-pill-btn success" onclick="approvePendingUser(${u.id})">
+                        ✓ Одобрить
+                    </button>
+                    <button type="button" class="action-pill-btn danger" onclick="rejectPendingUser(${u.id})">
+                        ✕ Отклонить
+                    </button>
+                </div>
+            </div>
+
+            <div class="pending-detail-body">
+                <div style="font-size:14px; color:#475569;">
+                    Проверьте анкетные данные кандидата перед предоставлением доступа к TraceDesk:
+                </div>
+                <div class="info-grid">
+                    <div class="info-field">
+                        <div class="info-field-label">Фамилия</div>
+                        <div class="info-field-value">${escapeHtml(u.lastName || '—')}</div>
+                    </div>
+                    <div class="info-field">
+                        <div class="info-field-label">Имя</div>
+                        <div class="info-field-value">${escapeHtml(u.firstName || '—')}</div>
+                    </div>
+                    <div class="info-field">
+                        <div class="info-field-label">ИИН</div>
+                        <div class="info-field-value">${escapeHtml(u.iin || '—')}</div>
+                    </div>
+                    <div class="info-field">
+                        <div class="info-field-label">Электронная почта (Email)</div>
+                        <div class="info-field-value">${escapeHtml(u.email || '—')}</div>
+                    </div>
+                    <div class="info-field">
+                        <div class="info-field-label">Роль в системе</div>
+                        <div class="info-field-value">${u.role === 'SUPPORT' ? 'Оператор техподдержки (SUPPORT)' : 'Следователь (INVESTIGATOR)'}</div>
+                    </div>
+                    <div class="info-field">
+                        <div class="info-field-label">Регион РК</div>
+                        <div class="info-field-value">${u.region ? escapeHtml(u.region.id + ' - ' + u.region.name) : '—'}</div>
+                    </div>
+                    <div class="info-field">
+                        <div class="info-field-label">Следственное управление</div>
+                        <div class="info-field-value">${u.department ? escapeHtml(u.department.name) : '—'}</div>
+                    </div>
+                    <div class="info-field">
+                        <div class="info-field-label">Должность</div>
+                        <div class="info-field-value">${u.position ? escapeHtml(u.position.name) : '—'}</div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    async function approvePendingUser(id) {
+        try {
+            const res = await fetch(`/admin/registrations/${id}/approve`, {
+                method: 'POST',
+                headers: authHeaders()
+            });
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok) {
+                showToast('error', `${res.status} — ${data.code || 'ERROR'}`, data.message || 'Не удалось одобрить заявку');
+                return;
+            }
+            showToast('success', 'Заявка одобрена', `Пользователь ${data.fullName} переведён в статус ACTIVE`);
+            await loadPendingRegistrations();
+        } catch (err) {
+            showToast('error', 'Ошибка сети', 'Не удалось выполнить запрос');
+        }
+    }
+
+    async function rejectPendingUser(id) {
+        try {
+            const res = await fetch(`/admin/registrations/${id}/reject`, {
+                method: 'POST',
+                headers: authHeaders()
+            });
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok) {
+                showToast('error', `${res.status} — ${data.code || 'ERROR'}`, data.message || 'Не удалось отклонить заявку');
+                return;
+            }
+            showToast('success', 'Заявка отклонена', `Заявка пользователя ${data.fullName} отклонена (REJECTED)`);
+            await loadPendingRegistrations();
+        } catch (err) {
+            showToast('error', 'Ошибка сети', 'Не удалось выполнить запрос');
+        }
+    }
+
+    async function loadAdminUsers() {
+        const role = document.getElementById('filterUserRole')?.value || '';
+        const regionId = document.getElementById('filterUserRegion')?.value || '';
+        const status = document.getElementById('filterUserStatus')?.value || '';
+
+        const params = new URLSearchParams();
+        if (role) params.set('role', role);
+        if (regionId) params.set('regionId', regionId);
+        if (status) params.set('status', status);
+
+        const url = '/admin/users' + (params.toString() ? '?' + params.toString() : '');
+        try {
+            const res = await fetch(url, { headers: authHeaders() });
+            if (res.status === 401) { logout(); return; }
+            if (!res.ok) {
+                const err = await res.json().catch(() => ({}));
+                showToast('error', 'Ошибка загрузки пользователей', err.message || 'Не удалось получить список');
+                return;
+            }
+            adminUsersList = await res.json();
+            document.getElementById('usersCountText').textContent = String(adminUsersList.length);
+            renderAdminUsersTable();
+        } catch (err) {
+            showToast('error', 'Ошибка сети', 'Не удалось загрузить список пользователей');
+        }
+    }
+
+    function renderAdminUsersTable() {
+        const tbody = document.getElementById('adminUsersTbody');
+        if (!adminUsersList.length) {
+            tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:32px; color:#64748b;">Пользователи по выбранным фильтрам не найдены</td></tr>`;
+            return;
+        }
+
+        const now = Date.now();
+        tbody.innerHTML = adminUsersList.map(u => {
+            const isTempLocked = u.lockedUntil && new Date(u.lockedUntil).getTime() > now;
+            const canUnblock = u.status === 'BLOCKED' || u.status === 'REJECTED' || isTempLocked;
+            const canBlock = u.status !== 'BLOCKED';
+
+            return `
+                <tr>
+                    <td>
+                        <div style="font-weight:700; color:#0f172a;">${escapeHtml(u.fullName)}</div>
+                        <div style="font-size:12px; color:#475569;">ИИН: <b>${escapeHtml(u.iin || '—')}</b></div>
+                        <div style="font-size:12px; color:#64748b;">${escapeHtml(u.email || '—')}</div>
+                    </td>
+                    <td><span class="role-tag ${escapeHtml(u.role)}">${escapeHtml(u.role)}</span></td>
+                    <td>${u.region ? escapeHtml(u.region.id + ' - ' + u.region.name) : '—'}</td>
+                    <td>
+                        <div style="font-size:13px; color:#0f172a;">${u.department ? escapeHtml(u.department.name) : '—'}</div>
+                        <div style="font-size:12px; color:#64748b;">${u.position ? escapeHtml(u.position.name) : '—'}</div>
+                    </td>
+                    <td>
+                        <span class="badge ${escapeHtml(u.status)}">${escapeHtml(u.status)}</span>
+                        ${isTempLocked ? `<div style="font-size:11px; color:#b91c1c; margin-top:4px; font-weight:600;">🔒 Блок до ${escapeHtml(formatDate(u.lockedUntil))}</div>` : ''}
+                    </td>
+                    <td>
+                        <div class="table-actions">
+                            <button type="button" class="action-pill-btn sm" onclick="openEditUserModal(${u.id})">Изменить</button>
+                            ${canBlock ? `<button type="button" class="action-pill-btn sm danger" onclick="blockUser(${u.id})">Заблокировать</button>` : ''}
+                            ${canUnblock ? `<button type="button" class="action-pill-btn sm success" onclick="unblockUser(${u.id})">Разблокировать</button>` : ''}
+                        </div>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+    }
+
+    function openEditUserModal(userId) {
+        const u = adminUsersList.find(x => x.id === userId);
+        if (!u) return;
+
+        hideBoxAlert('editUserAlert');
+        document.getElementById('editUserId').value = String(u.id);
+        document.getElementById('editUserSubtitle').textContent = `ИИН: ${u.iin || '—'} · Email: ${u.email || '—'}`;
+        document.getElementById('editLastName').value = u.lastName || '';
+        document.getElementById('editFirstName').value = u.firstName || '';
+        document.getElementById('editRole').value = u.role || 'INVESTIGATOR';
+        document.getElementById('editRegion').value = u.region ? u.region.id : (dictionaries.regions[0]?.id || '');
+        document.getElementById('editDepartment').value = u.department ? String(u.department.id) : '';
+        document.getElementById('editPosition').value = u.position ? String(u.position.id) : '';
+
+        document.getElementById('editUserModal').classList.add('open');
+    }
+
+    function closeEditUserModal() {
+        document.getElementById('editUserModal').classList.remove('open');
+    }
+
+    async function saveEditedUser() {
+        hideBoxAlert('editUserAlert');
+        const id = document.getElementById('editUserId').value;
+        const firstName = document.getElementById('editFirstName').value.trim();
+        const lastName = document.getElementById('editLastName').value.trim();
+        const role = document.getElementById('editRole').value;
+        const regionId = document.getElementById('editRegion').value;
+        const departmentIdVal = document.getElementById('editDepartment').value;
+        const positionIdVal = document.getElementById('editPosition').value;
+
+        if (!firstName || !lastName || !regionId) {
+            showBoxAlert('editUserAlert', 'error', 'Фамилия, имя и регион обязательны.');
+            return;
+        }
+
+        const payload = {
+            firstName,
+            lastName,
+            role,
+            regionId,
+            departmentId: departmentIdVal ? Number(departmentIdVal) : null,
+            positionId: positionIdVal ? Number(positionIdVal) : null
+        };
+
+        const btn = document.getElementById('editUserSaveBtn');
+        btn.disabled = true;
+        try {
+            const res = await fetch(`/admin/users/${id}`, {
+                method: 'PUT',
+                headers: authHeaders({ 'Content-Type': 'application/json' }),
+                body: JSON.stringify(payload)
+            });
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok) {
+                showBoxAlert('editUserAlert', 'error', escapeHtml(data.message || 'Ошибка сохранения профиля'));
+                return;
+            }
+            closeEditUserModal();
+            showToast('success', 'Профиль обновлён', `Данные сотрудника ${data.fullName} сохранены`);
+            await loadAdminUsers();
+        } catch (err) {
+            showBoxAlert('editUserAlert', 'error', 'Ошибка сети при сохранении');
+        } finally {
+            btn.disabled = false;
+        }
+    }
+
+    async function blockUser(id) {
+        try {
+            const res = await fetch(`/admin/users/${id}/block`, {
+                method: 'POST',
+                headers: authHeaders()
+            });
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok) {
+                showToast('error', `${res.status} — ${data.code || 'ERROR'}`, data.message || 'Ошибка блокировки');
+                return;
+            }
+            showToast('success', 'Пользователь заблокирован', `${data.fullName} переведён в статус BLOCKED`);
+            await loadAdminUsers();
+        } catch (err) {
+            showToast('error', 'Ошибка сети', 'Не удалось заблокировать пользователя');
+        }
+    }
+
+    async function unblockUser(id) {
+        try {
+            const res = await fetch(`/admin/users/${id}/unblock`, {
+                method: 'POST',
+                headers: authHeaders()
+            });
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok) {
+                showToast('error', `${res.status} — ${data.code || 'ERROR'}`, data.message || 'Ошибка разблокировки');
+                return;
+            }
+            showToast('success', 'Пользователь разблокирован', `${data.fullName} снова активен (ACTIVE)`);
+            await loadAdminUsers();
+        } catch (err) {
+            showToast('error', 'Ошибка сети', 'Не удалось разблокировать пользователя');
+        }
+    }
+
+    // ==================== РАБОЧАЯ ОБЛАСТЬ ТИКЕТОВ ====================
+    async function setTicketFilter(filter, btn) {
+        currentTicketFilter = filter;
         currentPage = 0;
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        selectedTicketId = null;
+        document.querySelectorAll('#tabsRow .tab-btn').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
-        await renderAll();
+        await renderTicketsWorkspace();
+    }
+
+    async function onAdminTicketRegionChange() {
+        currentTicketRegionFilter = document.getElementById('adminTicketRegionSelect').value;
+        currentPage = 0;
+        selectedTicketId = null;
+        await renderTicketsWorkspace();
     }
 
     async function changePage(delta) {
@@ -1127,75 +3105,58 @@
         if (nextPage < 0 || nextPage >= totalPages) return;
         currentPage = nextPage;
         selectedTicketId = null;
-        await renderAll();
+        await renderTicketsWorkspace();
     }
 
-    async function renderAll() {
+    async function renderTicketsWorkspace() {
         let list = [];
         let activeTicket = null;
 
-        if (backendOnline) {
-            try {
-                const statusQuery = currentFilter !== 'ALL' ? `&status=${currentFilter}` : '';
-                const res = await fetch(`/tickets?page=${currentPage}&size=${PAGE_SIZE}${statusQuery}`, { headers: authHeader() });
-                if (res.ok) {
-                    const page = await res.json();
-                    totalPages = Math.max(page.totalPages || 1, 1);
-                    totalElements = page.totalElements ?? 0;
-                    if (currentPage >= totalPages) {
-                        currentPage = Math.max(totalPages - 1, 0);
-                    }
-                    list = (page.content || []).map(t => ({
-                        ...t,
-                        attachmentName: t.hasAttachment ? 'error.png' : null
-                    }));
+        try {
+            const params = new URLSearchParams();
+            params.set('page', String(currentPage));
+            params.set('size', String(PAGE_SIZE));
+            if (currentTicketFilter !== 'ALL') params.set('status', currentTicketFilter);
+            if (authState.user.role === 'ADMIN' && currentTicketRegionFilter) {
+                params.set('regionId', currentTicketRegionFilter);
+            }
+
+            const res = await fetch('/tickets?' + params.toString(), { headers: authHeaders() });
+            if (res.status === 401) { logout(); return; }
+            if (res.ok) {
+                const page = await res.json();
+                totalPages = Math.max(page.totalPages || 1, 1);
+                totalElements = page.totalElements ?? 0;
+                if (currentPage >= totalPages) {
+                    currentPage = Math.max(totalPages - 1, 0);
                 }
-                if (selectedTicketId === null && list.length > 0) {
+                list = page.content || [];
+            }
+
+            if (selectedTicketId === null && list.length > 0) {
+                selectedTicketId = list[0].id;
+            }
+
+            if (selectedTicketId !== null) {
+                const detailRes = await fetch(`/tickets/${selectedTicketId}`, { headers: authHeaders() });
+                if (detailRes.ok) {
+                    activeTicket = await detailRes.json();
+                } else if (list.length > 0) {
                     selectedTicketId = list[0].id;
+                    const retryRes = await fetch(`/tickets/${selectedTicketId}`, { headers: authHeaders() });
+                    if (retryRes.ok) activeTicket = await retryRes.json();
                 }
-                if (selectedTicketId !== null) {
-                    const detailRes = await fetch(`/tickets/${selectedTicketId}`, { headers: authHeader() });
-                    if (detailRes.ok) {
-                        activeTicket = await detailRes.json();
-                    } else if (list.length > 0) {
-                        selectedTicketId = list[0].id;
-                        const retryRes = await fetch(`/tickets/${selectedTicketId}`, { headers: authHeader() });
-                        if (retryRes.ok) activeTicket = await retryRes.json();
-                    }
-                }
-            } catch (_) {}
-        } else {
-            const all = getLocalTickets();
-            const accessible = currentAccount.role === 'SUPPORT'
-                ? all
-                : all.filter(t => t.authorUsername === currentAccount.username);
-
-            const filtered = currentFilter !== 'ALL'
-                ? accessible.filter(t => t.status === currentFilter)
-                : accessible;
-
-            totalElements = filtered.length;
-            totalPages = Math.max(Math.ceil(totalElements / PAGE_SIZE), 1);
-            if (currentPage >= totalPages) {
-                currentPage = totalPages - 1;
             }
-            const start = currentPage * PAGE_SIZE;
-            list = filtered.slice(start, start + PAGE_SIZE);
-
-            if (selectedTicketId === null || !list.some(t => t.id === selectedTicketId)) {
-                selectedTicketId = list.length > 0 ? list[0].id : null;
-            }
-            activeTicket = accessible.find(t => t.id === selectedTicketId);
+        } catch (err) {
+            showToast('error', 'Ошибка загрузки', 'Не удалось получить список обращений');
         }
 
         const paginationEl = document.getElementById('paginationBar');
-        if (paginationEl) {
-            paginationEl.innerHTML = `
-                <button class="page-btn" onclick="changePage(-1)" ${currentPage <= 0 ? 'disabled' : ''}>← Назад</button>
-                <span>Стр. <b>${currentPage + 1}</b> из <b>${totalPages}</b> (${totalElements})</span>
-                <button class="page-btn" onclick="changePage(1)" ${currentPage + 1 >= totalPages ? 'disabled' : ''}>Вперёд →</button>
-            `;
-        }
+        paginationEl.innerHTML = `
+            <button type="button" class="page-btn" onclick="changePage(-1)" ${currentPage <= 0 ? 'disabled' : ''}>← Назад</button>
+            <span>Стр. <b>${currentPage + 1}</b> из <b>${totalPages}</b> (${totalElements})</span>
+            <button type="button" class="page-btn" onclick="changePage(1)" ${currentPage + 1 >= totalPages ? 'disabled' : ''}>Вперёд →</button>
+        `;
 
         const listEl = document.getElementById('ticketsList');
         if (list.length === 0) {
@@ -1204,73 +3165,83 @@
             listEl.innerHTML = list.map(t => `
                 <div class="ticket-item ${t.id === selectedTicketId ? 'selected' : ''}" onclick="selectTicket(${t.id})">
                     <div class="ticket-item-top">
-                        <span class="ticket-code">#${t.ticketNumber}</span>
-                        <span class="badge ${t.status}">${t.status}</span>
+                        <span class="ticket-code">#${escapeHtml(t.ticketNumber)}</span>
+                        <span class="badge ${escapeHtml(t.status)}">${escapeHtml(t.status)}</span>
                     </div>
-                    <div class="ticket-item-title">${t.title}</div>
+                    <div class="ticket-item-title">${escapeHtml(t.title)}</div>
                     <div class="ticket-item-author">
-                        <img class="avatar-sm" src="${AVATARS[t.authorUsername] || AVATARS.irina}" alt="">
-                        <span>${t.authorFullName}</span>
+                        <div class="avatar-circle sm INVESTIGATOR">${escapeHtml(getInitials(t.authorFullName))}</div>
+                        <span>${escapeHtml(t.authorFullName)}</span>
                     </div>
-                    ${(t.attachmentName || t.hasAttachment) ? `
-                    <div class="ticket-item-file">
-                        <span>📄</span>
-                        <span>${t.attachmentName || 'Вложение'}</span>
-                    </div>` : ''}
+                    <div class="ticket-item-meta">
+                        ${t.regionId ? `<span class="region-tag">${escapeHtml(t.regionId)} · ${escapeHtml(t.regionName || '')}</span>` : ''}
+                        ${t.hasAttachment ? `<span class="ticket-item-file">📎 Вложение</span>` : ''}
+                    </div>
                 </div>
             `).join('');
         }
 
-        renderDetail(activeTicket);
+        renderTicketDetail(activeTicket);
     }
 
     async function selectTicket(id) {
         selectedTicketId = id;
-        await renderAll();
+        await renderTicketsWorkspace();
     }
 
-    function renderDetail(t) {
+    function isTicketAssignedToCurrentUser(t) {
+        const u = authState.user;
+        if (!t.assigneeUsername) return false;
+        return t.assigneeUsername === u.iin
+            || t.assigneeUsername === authState.loginIin
+            || (t.assigneeFullName && t.assigneeFullName === u.fullName);
+    }
+
+    function renderTicketDetail(t) {
         const panel = document.getElementById('detailPanel');
+        const u = authState.user;
+
         if (!t) {
             panel.innerHTML = `
-                <div style="padding:48px; text-align:center; color:#64748b;">
+                <div style="padding:56px 24px; text-align:center; color:#64748b;">
                     <h3 style="color:#0f172a; margin-bottom:8px;">Нет выбранного обращения</h3>
-                    <p style="font-size:14px;">Создайте новое обращение кнопкой «+ Создать» слева.</p>
+                    <p style="font-size:14px;">${u.role === 'INVESTIGATOR' ? 'Создайте новое обращение кнопкой «+ Создать» слева.' : 'В выбранном фильтре пока нет обращений.'}</p>
                 </div>`;
             return;
         }
 
-        const isSupport = currentAccount.role === 'SUPPORT';
-        const isAssignedToOther = isSupport && t.status === 'IN_PROGRESS' && t.assigneeUsername && t.assigneeUsername !== currentAccount.username;
+        const isSupport = u.role === 'SUPPORT';
+        const isAssignedToMe = isSupport && isTicketAssignedToCurrentUser(t);
+        const isAssignedToOther = isSupport && t.status === 'IN_PROGRESS' && t.assigneeUsername && !isAssignedToMe;
 
         const isInProgressCurrent = t.status === 'IN_PROGRESS';
         const isClosedDone = t.status === 'CLOSED';
-        const sizeKb = t.attachmentSize ? Math.max(1, Math.round(t.attachmentSize / 1024)) : 142;
+        const sizeKb = t.attachmentSize ? Math.max(1, Math.round(t.attachmentSize / 1024)) : 1;
 
         panel.innerHTML = `
             <div class="detail-top">
                 <div>
-                    <div class="detail-heading">#${t.ticketNumber} — ${t.title}</div>
+                    <div class="detail-heading">#${escapeHtml(t.ticketNumber)} — ${escapeHtml(t.title)}</div>
                     <div class="detail-sub-row">
-                        <span class="badge ${t.status}">${t.status}</span>
+                        <span class="badge ${escapeHtml(t.status)}">${escapeHtml(t.status)}</span>
+                        ${t.regionId ? `<span class="region-tag">${escapeHtml(t.regionId)} - ${escapeHtml(t.regionName || '')}</span>` : ''}
                         <span style="font-size:13px; color:#64748b;">
-                            ${t.assigneeFullName ? 'Оператор: <b>' + t.assigneeFullName + '</b>' : 'Оператор ещё не назначен'}
+                            ${t.assigneeFullName ? 'Оператор: <b>' + escapeHtml(t.assigneeFullName) + '</b>' : 'Оператор ещё не назначен'}
                         </span>
                     </div>
                 </div>
                 ${isSupport ? `
                 <div class="top-actions">
-                    <button class="action-pill-btn" onclick="assignTicket(${t.id})" ${t.status !== 'OPEN' ? 'disabled' : ''}>
+                    <button type="button" class="action-pill-btn" onclick="assignTicket(${t.id})" ${t.status !== 'OPEN' ? 'disabled' : ''}>
                         Взять в работу
                     </button>
-                    <button class="action-pill-btn danger" onclick="closeTicket(${t.id})" ${t.status === 'CLOSED' ? 'disabled' : ''}>
+                    <button type="button" class="action-pill-btn danger" onclick="closeTicket(${t.id})" ${t.status !== 'IN_PROGRESS' || isAssignedToOther ? 'disabled' : ''}>
                         Закрыть обращение
                     </button>
                 </div>` : ''}
             </div>
 
             <div class="detail-body">
-                <!-- ЛЕВАЯ КОЛОНКА КАРТОЧКИ: ВЕРТИКАЛЬНЫЙ СТЕППЕР СТАТУСОВ + ИСТОРИЯ -->
                 <div class="stepper-col">
                     <div class="step-node">
                         <div class="step-circle done">✓</div>
@@ -1298,15 +3269,14 @@
                         <div style="font-weight:700; color:#0f172a; margin-bottom:6px;">История переходов:</div>
                         ${t.history.map(h => `
                             <div style="margin-bottom:6px; line-height:1.35;">
-                                <b>${h.oldStatus ? h.oldStatus + ' → ' : ''}${h.newStatus}</b><br>
-                                <span>${h.changedByFullName || h.changedByUsername}</span><br>
-                                <span style="color:#94a3b8;">${formatDate(h.changedAt)}</span>
+                                <b>${escapeHtml(h.oldStatus ? h.oldStatus + ' → ' : '')}${escapeHtml(h.newStatus)}</b><br>
+                                <span>${escapeHtml(h.changedByFullName || h.changedByUsername)}</span><br>
+                                <span style="color:#94a3b8;">${escapeHtml(formatDate(h.changedAt))}</span>
                             </div>
                         `).join('')}
                     </div>` : ''}
                 </div>
 
-                <!-- ПРАВАЯ КОЛОНКА КАРТОЧКИ: СКРИНШОТ, ДИАЛОГ И КОМПОЗЕР -->
                 <div class="conversation-col">
                     ${t.attachmentName ? `
                     <div class="attachment-card">
@@ -1316,64 +3286,65 @@
                             <div class="thumb-line-gray" style="width:32px;"></div>
                         </div>
                         <div>
-                            <div class="attachment-title">${t.attachmentName} <span>(${t.attachmentType || 'PNG'}, ${sizeKb} KB)</span></div>
-                            <button class="download-pill" onclick="downloadAttachment(${t.id}, '${t.attachmentName}')">Скачать</button>
+                            <div class="attachment-title">${escapeHtml(t.attachmentName)} <span>(${escapeHtml(t.attachmentType || 'IMG')}, ${sizeKb} KB)</span></div>
+                            <button type="button" class="download-pill" data-name="${escapeHtml(t.attachmentName)}" onclick="downloadAttachment(${t.id}, this.dataset.name)">Скачать</button>
                         </div>
                     </div>` : ''}
 
                     <div class="message-block">
-                        <!-- Исходное сообщение автора -->
                         <div class="msg-author-item">
-                            <img class="avatar-img" src="${AVATARS[t.authorUsername] || AVATARS.irina}" alt="">
+                            <div class="avatar-circle INVESTIGATOR">${escapeHtml(getInitials(t.authorFullName))}</div>
                             <div style="flex:1;">
                                 <div class="msg-header">
-                                    <span class="msg-name">${t.authorFullName}</span>
+                                    <span class="msg-name">${escapeHtml(t.authorFullName)}</span>
                                     <span class="msg-label">Описание проблемы</span>
-                                    <span class="msg-date">${formatDate(t.createdAt)}</span>
+                                    <span class="msg-date">${escapeHtml(formatDate(t.createdAt))}</span>
                                 </div>
-                                <div class="msg-text">${t.description}</div>
+                                <div class="msg-text">${escapeHtml(t.description)}</div>
                             </div>
                         </div>
 
-                        <!-- Ответы оператора -->
                         ${(t.replies || []).map(r => `
                             <div class="msg-bubble-support">
-                                <img class="avatar-img" src="${AVATARS[r.authorUsername] || AVATARS.oleg}" alt="">
+                                <div class="avatar-circle SUPPORT">${escapeHtml(getInitials(r.authorFullName))}</div>
                                 <div style="flex:1;">
                                     <div class="msg-header">
-                                        <span class="msg-name">${r.authorFullName}</span>
+                                        <span class="msg-name">${escapeHtml(r.authorFullName)}</span>
                                         <span class="role-tag SUPPORT">SUPPORT</span>
                                         <span class="msg-label">Ответ</span>
-                                        <span class="msg-date">${formatDate(r.createdAt)}</span>
+                                        <span class="msg-date">${escapeHtml(formatDate(r.createdAt))}</span>
                                     </div>
-                                    <div class="msg-text">${r.message}</div>
+                                    <div class="msg-text">${escapeHtml(r.message)}</div>
                                 </div>
                             </div>
                         `).join('')}
                     </div>
 
-                    ${!isSupport ? `
+                    ${u.role === 'ADMIN' ? `
+                        <div style="padding:12px 16px; border-radius:10px; background:#f5f3ff; border:1px solid #ddd6fe; color:#5b21b6; font-size:13.5px;">
+                            🛡 Режим мониторинга администратора (только чтение). Обрабатывать тикеты могут операторы <b>SUPPORT</b> соответствующего региона.
+                        </div>
+                    ` : !isSupport ? `
                         <div style="padding:12px 16px; border-radius:10px; background:#f8fafc; border:1px solid #e2e8f0; color:#475569; font-size:13.5px;">
-                            👤 Вы вошли как следователь (<b>${currentAccount.fullName}</b>). Отвечать на обращения и менять их статус могут только операторы <b>SUPPORT</b>.
+                            👤 Вы вошли как следователь (<b>${escapeHtml(u.fullName)}</b>). Отвечать на обращения и менять их статус могут только операторы <b>SUPPORT</b>.
                         </div>
                     ` : isAssignedToOther ? `
                         <div style="padding:12px 16px; border-radius:10px; background:#fffbeb; border:1px solid #fde68a; color:#92400e; font-size:13.5px;">
-                            🔒 Это обращение взял в работу <b>${t.assigneeFullName}</b>. Вы (<b>${currentAccount.fullName}</b>) просматриваете карточку в режиме чтения.
+                            🔒 Это обращение взял в работу <b>${escapeHtml(t.assigneeFullName)}</b>. Карточка открыта в режиме чтения.
                         </div>
                     ` : t.status === 'CLOSED' ? `
                         <div style="padding:12px 16px; border-radius:10px; background:#f1f5f9; border:1px solid #cbd5e1; color:#475569; font-size:13.5px;">
                             ✅ Обращение закрыто. Добавление новых ответов заблокировано (409 Conflict).
                         </div>
+                    ` : t.status === 'OPEN' ? `
+                        <div style="padding:12px 16px; border-radius:10px; background:#eff6ff; border:1px solid #bfdbfe; color:#1e40af; font-size:13.5px;">
+                            ℹ Нажмите <b>«Взять в работу»</b> в правом верхнем углу, чтобы ответить следователю.
+                        </div>
                     ` : `
                         <div class="composer-box">
-                            <textarea id="replyText" placeholder="Сообщение оператора..."></textarea>
+                            <textarea id="replyText" placeholder="Введите ответ оператора..."></textarea>
                             <div class="composer-footer">
-                                <div class="composer-icons">
-                                    <span>🖼</span>
-                                    <span>📎</span>
-                                    <span>➤</span>
-                                </div>
-                                <button class="send-btn" onclick="sendReply(${t.id})">Отправить</button>
+                                <button type="button" class="send-btn" onclick="sendReply(${t.id})">Отправить ответ</button>
                             </div>
                         </div>
                     `}
@@ -1383,230 +3354,130 @@
     }
 
     async function assignTicket(id) {
-        if (backendOnline) {
-            const res = await fetch(`/tickets/${id}/assign`, { method: 'POST', headers: authHeader() });
-            const data = await res.json().catch(() => ({}));
-            if (!res.ok) {
-                showToast('error', `${res.status} — ${data.code || 'ERROR'}:`, data.message || 'Ошибка назначения');
-                return;
-            }
-            showToast('success', '200 OK — Взято в работу:', `Назначен оператор ${currentAccount.fullName}`);
-            await renderAll();
+        const res = await fetch(`/tickets/${id}/assign`, { method: 'POST', headers: authHeaders() });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+            showToast('error', `${res.status} — ${data.code || 'ERROR'}`, data.message || 'Ошибка назначения');
             return;
         }
-        if (currentAccount.role !== 'SUPPORT') {
-            showToast('error', '403 Forbidden — ACCESS_DENIED:', 'Следователь не может вызывать команду оператора');
-            return;
-        }
-        const all = getLocalTickets();
-        const t = all.find(x => x.id === id);
-        if (t.status !== 'OPEN') {
-            showToast('error', '409 Conflict — ALREADY_ASSIGNED:', 'Обращение уже взято в работу');
-            return;
-        }
-        t.status = 'IN_PROGRESS';
-        t.assigneeUsername = currentAccount.username;
-        t.assigneeFullName = currentAccount.fullName;
-        saveLocalTickets(all);
-        showToast('success', '200 OK — Взято в работу:', `Назначен оператор ${currentAccount.fullName}`);
-        renderAll();
+        showToast('success', 'Взято в работу', `Назначен оператор ${authState.user.fullName}`);
+        await renderTicketsWorkspace();
     }
 
     async function sendReply(id) {
         const text = document.getElementById('replyText')?.value.trim() || '';
-        if (backendOnline) {
-            const res = await fetch(`/tickets/${id}/replies`, {
-                method: 'POST',
-                headers: { ...authHeader(), 'Content-Type': 'application/json' },
-                body: JSON.stringify({ message: text })
-            });
-            const data = await res.json().catch(() => ({}));
-            if (!res.ok) {
-                showToast('error', `${res.status} — ${data.code || 'ERROR'}:`, data.message || 'Ошибка отправки ответа');
-                return;
-            }
-            showToast('success', '201 Created — Ответ сохранён:', 'Ответ успешно добавлен в карточку');
-            await renderAll();
-            return;
-        }
-        if (currentAccount.role !== 'SUPPORT') {
-            showToast('error', '403 Forbidden — ACCESS_DENIED:', 'Отвечать может только оператор SUPPORT');
-            return;
-        }
-        if (!text) {
-            showToast('error', '400 Bad Request — VALIDATION_ERROR:', 'Текст ответа не может быть пустым');
-            return;
-        }
-        const all = getLocalTickets();
-        const t = all.find(x => x.id === id);
-        if (t.status !== 'IN_PROGRESS') {
-            showToast('error', '409 Conflict — INVALID_STATUS:', 'Сначала возьмите обращение в работу (IN_PROGRESS)');
-            return;
-        }
-        if (t.assigneeUsername !== currentAccount.username) {
-            showToast('error', '403 Forbidden — NOT_ASSIGNEE:', 'Отвечать может только назначенный оператор');
-            return;
-        }
-        t.replies.push({
-            id: Date.now(),
-            authorUsername: currentAccount.username,
-            authorFullName: currentAccount.shortName,
-            message: text,
-            createdAt: new Date().toLocaleDateString('ru-RU')
+        const res = await fetch(`/tickets/${id}/replies`, {
+            method: 'POST',
+            headers: authHeaders({ 'Content-Type': 'application/json' }),
+            body: JSON.stringify({ message: text })
         });
-        saveLocalTickets(all);
-        showToast('success', '201 Created — Ответ сохранён:', 'Ответ успешно добавлен в карточку');
-        renderAll();
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+            showToast('error', `${res.status} — ${data.code || 'ERROR'}`, data.message || 'Ошибка отправки ответа');
+            return;
+        }
+        showToast('success', 'Ответ сохранён', 'Ответ успешно добавлен в карточку');
+        await renderTicketsWorkspace();
     }
 
     async function closeTicket(id) {
-        if (backendOnline) {
-            const res = await fetch(`/tickets/${id}/close`, { method: 'POST', headers: authHeader() });
-            const data = await res.json().catch(() => ({}));
-            if (!res.ok) {
-                showToast('error', `${res.status} — ${data.code || 'ERROR'}:`, data.message || 'Невозможно закрыть обращение');
-                return;
-            }
-            showToast('success', '200 OK — Обращение закрыто:', `Статус #${data.ticketNumber} переведён в CLOSED`);
-            await renderAll();
+        const res = await fetch(`/tickets/${id}/close`, { method: 'POST', headers: authHeaders() });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+            showToast('error', `${res.status} — ${data.code || 'ERROR'}`, data.message || 'Невозможно закрыть обращение');
             return;
         }
-        if (currentAccount.role !== 'SUPPORT') {
-            showToast('error', '403 Forbidden — ACCESS_DENIED:', 'Закрыть обращение может только оператор');
-            return;
-        }
-        const all = getLocalTickets();
-        const t = all.find(x => x.id === id);
-        if (t.status !== 'IN_PROGRESS') {
-            showToast('error', '409 Conflict — INVALID_STATUS:', 'Обращение должно быть в статусе IN_PROGRESS');
-            return;
-        }
-        if (t.replies.length === 0) {
-            showToast('error', '409 Conflict — CLOSE_WITHOUT_REPLY:', 'Нельзя закрыть обращение без ответа оператора');
-            return;
-        }
-        t.status = 'CLOSED';
-        saveLocalTickets(all);
-        showToast('success', '200 OK — Обращение закрыто:', `Статус #${t.ticketNumber} переведён в CLOSED`);
-        renderAll();
+        showToast('success', 'Обращение закрыто', `Статус #${data.ticketNumber} переведён в CLOSED`);
+        await renderTicketsWorkspace();
     }
 
-    function openModal() {
-        if (currentAccount.role !== 'INVESTIGATOR') {
-            showToast('error', '403 Forbidden — ACCESS_DENIED:', 'Оператор техподдержки не может создавать обращения');
-            return;
-        }
-        document.getElementById('createModal').classList.add('open');
+    function openCreateTicketModal() {
+        document.getElementById('createTicketModal').classList.add('open');
     }
-    function closeModal() { document.getElementById('createModal').classList.remove('open'); }
+
+    function closeCreateTicketModal() {
+        document.getElementById('createTicketModal').classList.remove('open');
+    }
 
     async function createTicket() {
-        if (currentAccount.role !== 'INVESTIGATOR') {
-            showToast('error', '403 Forbidden — ACCESS_DENIED:', 'Создавать обращения могут только следователи (INVESTIGATOR)');
-            closeModal();
-            return;
-        }
         const title = document.getElementById('newTitle').value.trim();
         const desc = document.getElementById('newDesc').value.trim();
         const file = document.getElementById('newFile').files[0];
 
-        if (backendOnline) {
-            const formData = new FormData();
-            formData.append('title', title);
-            formData.append('description', desc);
-            if (file) {
-                formData.append('file', file);
-            }
-            const res = await fetch('/tickets', {
-                method: 'POST',
-                headers: authHeader(),
-                body: formData
-            });
-            const data = await res.json().catch(() => ({}));
-            if (!res.ok) {
-                showToast('error', `${res.status} — ${data.code || 'ERROR'}:`, data.message || 'Ошибка создания обращения');
-                return;
-            }
-            currentPage = 0;
-            selectedTicketId = data.id;
-            document.getElementById('newTitle').value = '';
-            document.getElementById('newDesc').value = '';
-            document.getElementById('newFile').value = '';
-            closeModal();
-            showToast('success', '201 Created:', `Создано обращение #${data.ticketNumber}`);
-            await renderAll();
-            return;
-        }
+        const formData = new FormData();
+        formData.append('title', title);
+        formData.append('description', desc);
+        if (file) formData.append('file', file);
 
-        if (!title || !desc) {
-            showToast('error', '400 Bad Request — VALIDATION_ERROR:', 'Тема и описание обязательны');
+        const res = await fetch('/tickets', {
+            method: 'POST',
+            headers: authHeaders(),
+            body: formData
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+            showToast('error', `${res.status} — ${data.code || 'ERROR'}`, data.message || 'Ошибка создания обращения');
             return;
         }
-        const all = getLocalTickets();
-        const nextId = all.length + 1;
-        const num = 'TD-' + String(nextId).padStart(5, '0');
-        all.unshift({
-            id: nextId,
-            ticketNumber: num,
-            title,
-            description: desc,
-            status: 'OPEN',
-            authorUsername: currentAccount.username,
-            authorFullName: currentAccount.shortName,
-            assigneeUsername: null,
-            assigneeFullName: null,
-            attachmentName: file ? file.name : 'error.png',
-            attachmentType: 'PNG',
-            attachmentSize: 145408,
-            createdAt: new Date().toLocaleDateString('ru-RU'),
-            replies: [],
-            history: []
-        });
-        saveLocalTickets(all);
         currentPage = 0;
-        selectedTicketId = nextId;
-        closeModal();
-        showToast('success', '201 Created:', `Создано обращение #${num}`);
-        renderAll();
+        selectedTicketId = data.id;
+        document.getElementById('newTitle').value = '';
+        document.getElementById('newDesc').value = '';
+        document.getElementById('newFile').value = '';
+        closeCreateTicketModal();
+        showToast('success', 'Обращение создано', `Создано обращение #${data.ticketNumber}`);
+        await renderTicketsWorkspace();
     }
 
     async function downloadAttachment(id, name) {
-        if (backendOnline) {
-            const res = await fetch(`/tickets/${id}/attachment`, { headers: authHeader() });
-            if (!res.ok) {
-                const err = await res.json().catch(() => ({}));
-                showToast('error', `${res.status} — ${err.code || 'ERROR'}:`, err.message || 'Не удалось скачать файл');
-                return;
-            }
-            const blob = await res.blob();
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = name || 'error.png';
-            document.body.appendChild(a);
-            a.click();
-            a.remove();
-            URL.revokeObjectURL(url);
-            showToast('success', '200 OK — Скачивание:', `Файл ${name} успешно скачан из MinIO`);
+        const res = await fetch(`/tickets/${id}/attachment`, { headers: authHeaders() });
+        if (!res.ok) {
+            const err = await res.json().catch(() => ({}));
+            showToast('error', `${res.status} — ${err.code || 'ERROR'}`, err.message || 'Не удалось скачать файл');
             return;
         }
-        showToast('success', '200 OK — Скачивание:', `Файл ${name} успешно загружен из MinIO`);
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = name || 'attachment.png';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+        showToast('success', 'Скачивание', `Файл ${name} успешно загружен`);
     }
 
-    function showToast(type, title, message) {
-        const container = document.getElementById('toastContainer');
-        const el = document.createElement('div');
-        el.className = 'toast-dark ' + (type === 'success' ? 'success' : '');
-        el.innerHTML = `
-            <div class="toast-warn-icon">${type === 'success' ? '✓' : '⚠'}</div>
-            <div>
-                <div class="toast-title">${title}</div>
-                <div class="toast-desc">${message}</div>
-            </div>
-            <button class="toast-close" onclick="this.parentElement.remove()">✕</button>
-        `;
-        container.appendChild(el);
-        setTimeout(() => { if (el.parentElement) el.remove(); }, 6000);
+    // ==================== ИНИЦИАЛИЗАЦИЯ ====================
+    async function init() {
+        window.addEventListener('click', () => {
+            const dd = document.getElementById('profileDropdown');
+            if (dd) dd.classList.remove('open');
+        });
+
+        await loadDictionaries();
+
+        const savedRaw = sessionStorage.getItem(AUTH_STORAGE_KEY);
+        if (savedRaw) {
+            try {
+                const saved = JSON.parse(savedRaw);
+                if (saved && saved.basicToken) {
+                    const res = await fetch('/auth/me', {
+                        headers: { 'Authorization': 'Basic ' + saved.basicToken }
+                    });
+                    if (res.ok) {
+                        authState = {
+                            basicToken: saved.basicToken,
+                            loginIin: saved.loginIin,
+                            user: await res.json()
+                        };
+                        enterApp();
+                        return;
+                    }
+                }
+            } catch (_) {}
+            sessionStorage.removeItem(AUTH_STORAGE_KEY);
+        }
     }
 
     init();
