@@ -70,6 +70,7 @@ public class SecurityConfig {
                                 "/api/dictionaries/**",
                                 "/auth/register/**"
                         ).permitAll()
+                        .requestMatchers("/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )
                 .httpBasic(basic -> basic.authenticationEntryPoint(authEntryPoint))
