@@ -267,6 +267,17 @@ class AdminAndRegionalRoutingIntegrationTest {
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.code").value("ACCESS_DENIED"));
 
+        // 5.1. Олег (01) НЕ может читать и брать в работу тикет Актобе (04) -> 403 ACCESS_DENIED
+        mockMvc.perform(get("/tickets/{id}", aktobeTicketId)
+                        .with(httpBasic("930303300003", "password")))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code").value("ACCESS_DENIED"));
+
+        mockMvc.perform(post("/tickets/{id}/assign", aktobeTicketId)
+                        .with(httpBasic("930303300003", "password")))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code").value("ACCESS_DENIED"));
+
         // 6. ADMIN видит все тикеты, может фильтровать по ?regionId=01 и читать/скачивать любой тикет
         mockMvc.perform(get("/tickets")
                         .with(httpBasic("000000000001", "password")))

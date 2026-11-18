@@ -95,13 +95,15 @@ class TicketIntegrationTest {
 
         Long ticketId = extractId(createResult.getResponse().getContentAsString());
 
-        // 2. Олег находит обращение с фильтром OPEN
+        // 2. Олег находит обращение с фильтром OPEN (с региональной привязкой 01 — г. Астана)
         mockMvc.perform(get("/tickets")
                         .param("status", "OPEN")
                         .with(httpBasic("oleg", "password")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content[0].id").value(ticketId))
-                .andExpect(jsonPath("$.content[0].title").value("Не скачивается PDF"));
+                .andExpect(jsonPath("$.content[0].title").value("Не скачивается PDF"))
+                .andExpect(jsonPath("$.content[0].regionId").value("01"))
+                .andExpect(jsonPath("$.content[0].regionName").value("г. Астана"));
 
         // 3. Олег берёт обращение в работу
         mockMvc.perform(post("/tickets/{id}/assign", ticketId)
@@ -124,11 +126,13 @@ class TicketIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("CLOSED"));
 
-        // 6. Ирина открывает карточку и видит CLOSED, ответ и 3 записи истории (OPEN -> IN_PROGRESS -> CLOSED)
+        // 6. Ирина открывает карточку и видит CLOSED, регион 01, ответ и 3 записи истории (OPEN -> IN_PROGRESS -> CLOSED)
         mockMvc.perform(get("/tickets/{id}", ticketId)
                         .with(httpBasic("irina", "password")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("CLOSED"))
+                .andExpect(jsonPath("$.regionId").value("01"))
+                .andExpect(jsonPath("$.regionName").value("г. Астана"))
                 .andExpect(jsonPath("$.replies.length()").value(1))
                 .andExpect(jsonPath("$.replies[0].message").value("Проверьте доступ к материалам дела"))
                 .andExpect(jsonPath("$.history.length()").value(3))
@@ -283,6 +287,59 @@ class TicketIntegrationTest {
             ticketRepository.deleteAll();
             userRepository.findByIin("930303300099").ifPresent(userRepository::delete);
         }
+    }
+
+    @Test
+    @DisplayName("Изоляция регионов: оператор SUPPORT из региона '01' не видит и не может взять в работу тикет из региона '04'")
+    void supportFromRegion01CannotSeeOrAssignTicketFromRegion04Test() throws Exception {
+        MockMultipartFile file = new MockMultipartFile("file", "error.png", "image/png", SYNTHETIC_PNG);
+
+        // Павел (регион 04 — Актюбинская область) создаёт обращение по ИИН
+        MvcResult aktobeResult = mockMvc.perform(multipart("/tickets")
+                        .file(file)
+                        .param("title", "Тикет региона 04")
+                        .param("description", "Проблема у следователя из Актюбинской области")
+                        .with(httpBasic("940202300002", "password")))
+                .andExpect(status().isCreated())
+                .andReturn();
+
+        Long aktobeTicketId = extractId(aktobeResult.getResponse().getContentAsString());
+
+        // Оператор Олег из региона 01 (930303300003) НЕ видит тикет региона 04 в общем списке
+        mockMvc.perform(get("/tickets")
+                        .with(httpBasic("930303300003", "password")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalElements").value(0));
+
+        // Олег (01) получает 403 при попытке открыть карточку, взять в работу или скачать вложение тикета региона 04
+        mockMvc.perform(get("/tickets/{id}", aktobeTicketId)
+                        .with(httpBasic("930303300003", "password")))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code").value("ACCESS_DENIED"));
+
+        mockMvc.perform(post("/tickets/{id}/assign", aktobeTicketId)
+                        .with(httpBasic("930303300003", "password")))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code").value("ACCESS_DENIED"));
+
+        mockMvc.perform(get("/tickets/{id}/attachment", aktobeTicketId)
+                        .with(httpBasic("930303300003", "password")))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code").value("ACCESS_DENIED"));
+
+        // Оператор Анна из региона 04 (960404400004) видит тикет и успешно берёт его в работу
+        mockMvc.perform(get("/tickets")
+                        .with(httpBasic("960404400004", "password")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalElements").value(1))
+                .andExpect(jsonPath("$.content[0].id").value(aktobeTicketId))
+                .andExpect(jsonPath("$.content[0].regionId").value("04"));
+
+        mockMvc.perform(post("/tickets/{id}/assign", aktobeTicketId)
+                        .with(httpBasic("960404400004", "password")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("IN_PROGRESS"))
+                .andExpect(jsonPath("$.assigneeUsername").value("anna"));
     }
 
     private Long extractId(String json) {

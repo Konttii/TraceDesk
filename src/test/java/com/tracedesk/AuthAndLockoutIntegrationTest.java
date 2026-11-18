@@ -62,14 +62,16 @@ class AuthAndLockoutIntegrationTest {
     @Test
     @DisplayName("GET /auth/me: вход по ИИН (12 цифр) и по username (обратная совместимость) возвращает полный профиль пользователя")
     void loginByIinAndUsernameReturnsFullProfileTest() throws Exception {
+        User irina = userRepository.findByIin("950101400001").orElseThrow();
+
         // 1. Вход по ИИН Ирины (950101400001)
         mockMvc.perform(get("/auth/me")
                         .with(httpBasic("950101400001", "password")))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").isNumber())
+                .andExpect(jsonPath("$.id").value(irina.getId()))
                 .andExpect(jsonPath("$.iin").value("950101400001"))
                 .andExpect(jsonPath("$.email").value("irina@tracedesk.kz"))
-                .andExpect(jsonPath("$.fullName").value("Соколова Ирина"))
+                .andExpect(jsonPath("$.fullName").value(irina.getFullName()))
                 .andExpect(jsonPath("$.firstName").value("Ирина"))
                 .andExpect(jsonPath("$.lastName").value("Соколова"))
                 .andExpect(jsonPath("$.role").value("INVESTIGATOR"))
