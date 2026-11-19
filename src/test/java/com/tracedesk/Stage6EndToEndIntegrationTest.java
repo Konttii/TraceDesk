@@ -43,11 +43,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ActiveProfiles("test")
 class Stage6EndToEndIntegrationTest {
 
-    private static final String IIN_CANDIDATE_1 = "970715300801";
+    private static final String IIN_CANDIDATE_1 = "970715300800";
     private static final String EMAIL_CANDIDATE_1 = "stage6.candidate1@tracedesk.kz";
-    private static final String IIN_CANDIDATE_2 = "980920400802";
+    private static final String IIN_CANDIDATE_2 = "980920400803";
     private static final String EMAIL_CANDIDATE_2 = "stage6.candidate2@tracedesk.kz";
-    private static final String IIN_OTHER = "961110300803";
+    private static final String IIN_OTHER = "961110300802";
     private static final String EMAIL_OTHER = "stage6.other@tracedesk.kz";
     private static final String STRONG_PASSWORD = "StrongPass12!";
 
@@ -90,9 +90,89 @@ class Stage6EndToEndIntegrationTest {
                 .andExpect(content().string(containsString("id=\"registerForm\"")))
                 .andExpect(content().string(containsString("id=\"passwordStrengthFill\"")))
                 .andExpect(content().string(containsString("id=\"otpModal\"")))
+                .andExpect(content().string(containsString("id=\"passwordResetModal\"")))
+                .andExpect(content().string(containsString("id=\"confirmActionModal\"")))
                 .andExpect(content().string(containsString("id=\"adminWorkspace\"")))
                 .andExpect(content().string(containsString("/api/dictionaries/regions")))
                 .andExpect(content().string(containsString("/auth/register/verify-otp")));
+    }
+
+    @Test
+    @DisplayName("Строгая валидация отклоняет фиктивные ИИН (111111111111, неверная контрольная цифра) и некорректные Email (k@s.........a)")
+    void strictIinAndEmailValidationRejectsInvalidInputsTest() throws Exception {
+        for (String badIin : List.of("111111111111", "000000000000", "980515300119", "980515900111", "290101500001")) {
+            RegisterInitRequest req = new RegisterInitRequest(
+                    "Тимур",
+                    "Ахметов",
+                    badIin,
+                    EMAIL_OTHER,
+                    STRONG_PASSWORD,
+                    Role.INVESTIGATOR,
+                    "01",
+                    (short) 1,
+                    (short) 2
+            );
+            mockMvc.perform(post("/auth/register/init")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(req)))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"));
+        }
+
+        for (String badEmail : List.of("k@s.........a", "k@s.........aa", "a..b@mail.kz", ".user@mail.kz", "user@-mail.kz", "user@mail.c")) {
+            RegisterInitRequest req = new RegisterInitRequest(
+                    "Тимур",
+                    "Ахметов",
+                    IIN_OTHER,
+                    badEmail,
+                    STRONG_PASSWORD,
+                    Role.INVESTIGATOR,
+                    "01",
+                    (short) 1,
+                    (short) 2
+            );
+            mockMvc.perform(post("/auth/register/init")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(req)))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"));
+        }
+
+        for (String badName : List.of("Арман123", "Тимур!", "@User#", "12345", "А", "-Арман", "Арман--Бек")) {
+            RegisterInitRequest badFirstNameReq = new RegisterInitRequest(
+                    badName,
+                    "Ахметов",
+                    IIN_OTHER,
+                    EMAIL_OTHER,
+                    STRONG_PASSWORD,
+                    Role.INVESTIGATOR,
+                    "01",
+                    (short) 1,
+                    (short) 2
+            );
+            mockMvc.perform(post("/auth/register/init")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(badFirstNameReq)))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"));
+
+            RegisterInitRequest badLastNameReq = new RegisterInitRequest(
+                    "Тимур",
+                    badName,
+                    IIN_OTHER,
+                    EMAIL_OTHER,
+                    STRONG_PASSWORD,
+                    Role.INVESTIGATOR,
+                    "01",
+                    (short) 1,
+                    (short) 2
+            );
+            mockMvc.perform(post("/auth/register/init")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(badLastNameReq)))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"));
+        }
     }
 
     @Test

@@ -1424,6 +1424,132 @@
             cursor: not-allowed;
         }
 
+        /* Кастомное модальное окно подтверждения (Confirm Modal) */
+        .confirm-backdrop {
+            z-index: 260;
+            background: rgba(15, 23, 42, 0.55);
+        }
+
+        .confirm-modal {
+            max-width: 440px;
+        }
+
+        .confirm-header-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .confirm-icon-badge {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 19px;
+            font-weight: 800;
+            flex-shrink: 0;
+        }
+
+        .confirm-icon-badge.danger {
+            background: #fef2f2;
+            color: #dc2626;
+            border: 1px solid #fecaca;
+        }
+
+        .confirm-icon-badge.success {
+            background: #ecfdf5;
+            color: #059669;
+            border: 1px solid #a7f3d0;
+        }
+
+        .confirm-icon-badge.primary {
+            background: #eff6ff;
+            color: #2563eb;
+            border: 1px solid #bfdbfe;
+        }
+
+        .confirm-modal-text {
+            font-size: 14px;
+            color: #334155;
+            line-height: 1.55;
+            margin-bottom: 20px;
+        }
+
+        .confirm-modal-text b {
+            color: #0f172a;
+        }
+
+        .confirm-modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        .confirm-action-btn {
+            border: none;
+            border-radius: 10px;
+            padding: 9px 18px;
+            font-size: 13.5px;
+            font-weight: 700;
+            color: #ffffff;
+            cursor: pointer;
+            transition: background 0.15s, opacity 0.15s;
+        }
+
+        .confirm-action-btn.danger {
+            background: #dc2626;
+        }
+
+        .confirm-action-btn.danger:hover:not(:disabled) {
+            background: #b91c1c;
+        }
+
+        .confirm-action-btn.success {
+            background: #059669;
+        }
+
+        .confirm-action-btn.success:hover:not(:disabled) {
+            background: #047857;
+        }
+
+        .confirm-action-btn.primary {
+            background: #1e293b;
+        }
+
+        .confirm-action-btn.primary:hover:not(:disabled) {
+            background: #0f172a;
+        }
+
+        .confirm-action-btn:disabled {
+            opacity: 0.65;
+            cursor: not-allowed;
+        }
+
+        .role-inline-select {
+            font-size: 11.5px;
+            font-weight: 700;
+            padding: 3px 10px;
+            border-radius: 999px;
+            border: 1px solid #cbd5e1;
+            cursor: pointer;
+            outline: none;
+        }
+
+        .role-inline-select.SUPPORT {
+            background: #dbeafe;
+            color: #1e40af;
+            border-color: #93c5fd;
+        }
+
+        .role-inline-select.INVESTIGATOR {
+            background: #e2e8f0;
+            color: #334155;
+            border-color: #cbd5e1;
+        }
+
         /* ==================== TOASTS ==================== */
         .toast-container {
             position: fixed;
@@ -1545,6 +1671,9 @@
                         >
                         <button type="button" class="toggle-pass-btn" onclick="togglePasswordVisibility('loginPassword', this)" title="Показать/скрыть пароль">👁</button>
                     </div>
+                    <div style="display:flex; justify-content:flex-end; margin-top:6px;">
+                        <a href="javascript:void(0)" id="forgotPasswordLink" onclick="openPasswordResetModal()" style="font-size:12.5px; font-weight:600; color:#2563eb; text-decoration:none;">Забыли пароль?</a>
+                    </div>
                 </div>
 
                 <button type="submit" class="primary-btn" id="loginSubmitBtn">Войти в систему</button>
@@ -1568,11 +1697,25 @@
                 <div class="form-grid-2">
                     <div class="form-group">
                         <label for="regLastName">Фамилия *</label>
-                        <input type="text" id="regLastName" maxlength="50" placeholder="Сериков">
+                        <input
+                            type="text"
+                            id="regLastName"
+                            maxlength="50"
+                            placeholder="Сериков"
+                            oninput="onPersonNameInput(this, 'regLastNameHint', 'Фамилия')"
+                        >
+                        <div class="field-hint" id="regLastNameHint">Только буквы (без цифр и спецсимволов)</div>
                     </div>
                     <div class="form-group">
                         <label for="regFirstName">Имя *</label>
-                        <input type="text" id="regFirstName" maxlength="50" placeholder="Арман">
+                        <input
+                            type="text"
+                            id="regFirstName"
+                            maxlength="50"
+                            placeholder="Арман"
+                            oninput="onPersonNameInput(this, 'regFirstNameHint', 'Имя')"
+                        >
+                        <div class="field-hint" id="regFirstNameHint">Только буквы (без цифр и спецсимволов)</div>
                     </div>
                 </div>
 
@@ -1600,7 +1743,14 @@
 
                 <div class="form-group">
                     <label for="regEmail">Электронная почта (Email) *</label>
-                    <input type="email" id="regEmail" maxlength="150" placeholder="arman.serikov@tracedesk.kz">
+                    <input
+                        type="email"
+                        id="regEmail"
+                        maxlength="150"
+                        placeholder="arman.serikov@tracedesk.kz"
+                        oninput="onRegisterEmailInput(this)"
+                    >
+                    <div class="field-hint" id="regEmailHint">На эту почту придёт 6-значный код подтверждения</div>
                 </div>
 
                 <div class="form-group">
@@ -1611,7 +1761,7 @@
                             id="regPassword"
                             autocomplete="new-password"
                             placeholder="Минимум 8 символов (A-z, 0-9)"
-                            oninput="updatePasswordStrengthUI(this.value)"
+                            oninput="updatePasswordStrengthUI(this.value); onRegConfirmPasswordInput()"
                         >
                         <button type="button" class="toggle-pass-btn" onclick="togglePasswordVisibility('regPassword', this)" title="Показать/скрыть пароль">👁</button>
                     </div>
@@ -1625,6 +1775,21 @@
                             <span id="passwordStrengthRatio"></span>
                         </div>
                     </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="regConfirmPassword">Подтверждение пароля *</label>
+                    <div class="password-wrap">
+                        <input
+                            type="password"
+                            id="regConfirmPassword"
+                            autocomplete="new-password"
+                            placeholder="Повторите пароль без опечаток"
+                            oninput="onRegConfirmPasswordInput()"
+                        >
+                        <button type="button" class="toggle-pass-btn" onclick="togglePasswordVisibility('regConfirmPassword', this)" title="Показать/скрыть пароль">👁</button>
+                    </div>
+                    <div class="field-hint" id="regConfirmPasswordHint">Повторите пароль для проверки на опечатки</div>
                 </div>
 
                 <div class="form-group">
@@ -1835,6 +2000,113 @@
     </div>
 </div>
 
+<!-- ==================== МОДАЛЬНОЕ ОКНО ВОССТАНОВЛЕНИЯ ПАРОЛЯ ==================== -->
+<div class="modal-backdrop" id="passwordResetModal">
+    <div class="modal">
+        <div class="modal-title">Восстановление пароля</div>
+        <div class="modal-subtitle" id="pwdResetSubtitle">
+            Введите ваш ИИН, чтобы получить 6-значный код восстановления на привязанную почту.
+        </div>
+
+        <div id="pwdResetAlert" class="alert-box hidden"></div>
+
+        <!-- Шаг 1: Ввод ИИН -->
+        <div id="pwdResetStep1">
+            <div class="form-group">
+                <label for="pwdResetIin">ИИН (12 цифр) *</label>
+                <input
+                    type="text"
+                    id="pwdResetIin"
+                    inputmode="numeric"
+                    maxlength="12"
+                    placeholder="Например: 950101400001"
+                    oninput="onDigitsOnlyInput(this, 12)"
+                >
+                <div class="field-hint">Восстановление доступно только для активных учётных записей</div>
+            </div>
+            <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:16px;">
+                <button type="button" class="action-pill-btn" onclick="closePasswordResetModal()">Отмена</button>
+                <button type="button" class="send-btn" id="pwdResetInitBtn" onclick="handlePasswordResetInit()">Получить код</button>
+            </div>
+        </div>
+
+        <!-- Шаг 2: Подтверждение 6-значного OTP-кода из письма -->
+        <div id="pwdResetStep2" class="hidden">
+            <div class="form-group">
+                <label for="pwdResetCodeInput">6-значный код из письма *</label>
+                <input
+                    type="text"
+                    id="pwdResetCodeInput"
+                    class="otp-input"
+                    inputmode="numeric"
+                    maxlength="6"
+                    autocomplete="one-time-code"
+                    placeholder="000000"
+                    oninput="onPwdResetOtpInput(this)"
+                >
+                <div class="field-hint" id="pwdResetOtpStatusHint">После ввода 6 цифр код будет проверен автоматически через 1 секунду</div>
+            </div>
+
+            <div class="otp-footer-actions">
+                <button type="button" class="resend-btn" id="pwdResetResendBtn" onclick="resendPasswordResetOtp()" disabled>
+                    Отправить повторно (60 с)
+                </button>
+                <div class="field-hint" id="pwdResetResendsHint" style="text-align:center;"></div>
+                <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:4px;">
+                    <button type="button" class="action-pill-btn" onclick="closePasswordResetModal()">Отмена</button>
+                    <button type="button" class="send-btn" id="pwdResetVerifyOtpBtn" onclick="verifyPasswordResetOtp()">Подтвердить код</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Шаг 3: Установка нового пароля и подтверждение пароля -->
+        <div id="pwdResetStep3" class="hidden">
+            <div class="form-group">
+                <label for="pwdResetNewPassword">Новый пароль *</label>
+                <div class="password-wrap">
+                    <input
+                        type="password"
+                        id="pwdResetNewPassword"
+                        autocomplete="new-password"
+                        placeholder="Минимум 8 символов (A-z, 0-9)"
+                        oninput="updatePwdResetStrengthUI(this.value); onPwdResetConfirmPasswordInput()"
+                    >
+                    <button type="button" class="toggle-pass-btn" onclick="togglePasswordVisibility('pwdResetNewPassword', this)" title="Показать/скрыть пароль">👁</button>
+                </div>
+                <div class="strength-box">
+                    <div class="strength-track">
+                        <div class="strength-fill" id="pwdResetStrengthFill"></div>
+                    </div>
+                    <div class="strength-meta empty" id="pwdResetStrengthMeta">
+                        <span id="pwdResetStrengthLabel">Введите новый пароль для оценки надёжности</span>
+                        <span id="pwdResetStrengthRatio"></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="pwdResetConfirmPassword">Повторите новый пароль *</label>
+                <div class="password-wrap">
+                    <input
+                        type="password"
+                        id="pwdResetConfirmPassword"
+                        autocomplete="new-password"
+                        placeholder="Повторите новый пароль"
+                        oninput="onPwdResetConfirmPasswordInput()"
+                    >
+                    <button type="button" class="toggle-pass-btn" onclick="togglePasswordVisibility('pwdResetConfirmPassword', this)" title="Показать/скрыть пароль">👁</button>
+                </div>
+                <div class="field-hint" id="pwdResetConfirmPasswordHint">Пароли должны совпадать</div>
+            </div>
+
+            <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:18px;">
+                <button type="button" class="action-pill-btn" onclick="closePasswordResetModal()">Отмена</button>
+                <button type="button" class="send-btn" id="pwdResetConfirmBtn" onclick="handlePasswordResetConfirm()">Сменить пароль</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- ==================== МОДАЛЬНОЕ ОКНО СОЗДАНИЯ ТИКЕТА ==================== -->
 <div class="modal-backdrop" id="createTicketModal">
     <div class="modal">
@@ -1871,17 +2143,17 @@
         <div class="form-grid-2">
             <div class="form-group">
                 <label for="editLastName">Фамилия *</label>
-                <input type="text" id="editLastName" maxlength="50">
+                <input type="text" id="editLastName" maxlength="50" oninput="onPersonNameInput(this, null, 'Фамилия')">
             </div>
             <div class="form-group">
                 <label for="editFirstName">Имя *</label>
-                <input type="text" id="editFirstName" maxlength="50">
+                <input type="text" id="editFirstName" maxlength="50" oninput="onPersonNameInput(this, null, 'Имя')">
             </div>
         </div>
 
         <div class="form-group">
             <label for="editRole">Роль *</label>
-            <select id="editRole">
+            <select id="editRole" onchange="onEditModalRoleChange(this)">
                 <option value="INVESTIGATOR">Следователь (INVESTIGATOR)</option>
                 <option value="SUPPORT">Оператор (SUPPORT)</option>
             </select>
@@ -1905,6 +2177,21 @@
         <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:16px;">
             <button type="button" class="action-pill-btn" onclick="closeEditUserModal()">Отмена</button>
             <button type="button" class="send-btn" id="editUserSaveBtn" onclick="saveEditedUser()">Сохранить</button>
+        </div>
+    </div>
+</div>
+
+<!-- ==================== КАСТОМНОЕ МОДАЛЬНОЕ ОКНО ПОДТВЕРЖДЕНИЯ (CONFIRM MODAL) ==================== -->
+<div class="modal-backdrop confirm-backdrop" id="confirmActionModal" onclick="onConfirmBackdropClick(event)">
+    <div class="modal confirm-modal">
+        <div class="confirm-header-row">
+            <div class="confirm-icon-badge danger" id="confirmModalIcon">⚠</div>
+            <div class="modal-title" id="confirmModalTitle" style="margin-bottom:0;">Подтверждение действия</div>
+        </div>
+        <div class="confirm-modal-text" id="confirmModalText">Вы уверены?</div>
+        <div class="confirm-modal-actions">
+            <button type="button" class="action-pill-btn" id="confirmModalCancelBtn" onclick="cancelConfirmModal()">Отмена</button>
+            <button type="button" class="confirm-action-btn danger" id="confirmModalConfirmBtn" onclick="executeConfirmModalAction()">Да, подтвердить</button>
         </div>
     </div>
 </div>
@@ -1944,8 +2231,16 @@
     let pendingRegistrations = [];
     let selectedPendingId = null;
     let adminUsersList = [];
+    let editModalOriginalRole = null;
 
-    // Состояние OTP модалки
+    // Состояние кастомного модального окна подтверждения (Confirm Modal)
+    let confirmModalState = {
+        loading: false,
+        onConfirm: null,
+        onCancel: null
+    };
+
+    // Состояние OTP модалки регистрации
     let otpState = {
         email: '',
         autoSubmitTimer: null,
@@ -1953,6 +2248,19 @@
         cooldownSeconds: 0,
         remainingResends: 3,
         submitting: false,
+        attemptsExhausted: false
+    };
+
+    // Состояние модалки восстановления пароля
+    let pwdResetState = {
+        iin: '',
+        verifiedCode: '',
+        maskedEmail: '',
+        autoSubmitTimer: null,
+        cooldownTimer: null,
+        cooldownSeconds: 0,
+        remainingResends: 3,
+        submittingOtp: false,
         attemptsExhausted: false
     };
 
@@ -2059,26 +2367,142 @@
         }
     }
 
-    // ==================== ВАЛИДАЦИЯ ИИН И НАДЁЖНОСТИ ПАРОЛЯ ====================
+    // ==================== ВАЛИДАЦИЯ ФИО, ИИН, EMAIL И НАДЁЖНОСТИ ПАРОЛЯ ====================
+    const STRICT_NAME_ALLOWED_CHARS = /[^A-Za-zА-Яа-яЁёӘәҒғҚқҢңӨөҰұҮүҺһІі\s-]/g;
+    const STRICT_NAME_REGEX = /^[A-Za-zА-Яа-яЁёӘәҒғҚқҢңӨөҰұҮүҺһІі]+(?:[\s-][A-Za-zА-Яа-яЁёӘәҒғҚқҢңӨөҰұҮүҺһІі]+)*$/;
+    const STRICT_EMAIL_REGEX = /^[A-Za-z0-9_%+-]+(?:\.[A-Za-z0-9_%+-]+)*@(?:[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?\.)+[A-Za-z]{2,24}$/;
+
+    function isValidPersonName(rawValue, fieldLabel) {
+        const val = (rawValue || '').trim();
+        if (!val) {
+            return { valid: false, reason: `${fieldLabel} не может быть пустым` };
+        }
+        if (val.length < 2 || val.length > 50) {
+            return { valid: false, reason: `${fieldLabel}: от 2 до 50 символов` };
+        }
+        if (!STRICT_NAME_REGEX.test(val)) {
+            return { valid: false, reason: `${fieldLabel}: только буквы (без цифр и спецсимволов)` };
+        }
+        return { valid: true, reason: 'Корректно' };
+    }
+
+    function onPersonNameInput(input, hintId, fieldLabel) {
+        const cleaned = input.value.replace(STRICT_NAME_ALLOWED_CHARS, '');
+        if (input.value !== cleaned) {
+            input.value = cleaned;
+        }
+        const val = input.value.trim();
+        const hint = hintId ? document.getElementById(hintId) : null;
+        if (!val) {
+            input.classList.remove('input-invalid');
+            if (hint) {
+                hint.className = 'field-hint';
+                hint.textContent = 'Только буквы (без цифр и спецсимволов)';
+            }
+            return;
+        }
+        const check = isValidPersonName(val, fieldLabel);
+        input.classList.toggle('input-invalid', !check.valid);
+        if (hint) {
+            hint.className = 'field-hint ' + (check.valid ? 'success' : 'error');
+            hint.textContent = check.valid ? 'Корректно' : check.reason;
+        }
+    }
+
+    function isValidEmailFormat(rawEmail) {
+        const email = (rawEmail || '').trim();
+        if (!email) {
+            return { valid: false, reason: 'Укажите адрес электронной почты' };
+        }
+        if (email.length > 150) {
+            return { valid: false, reason: 'Email не должен превышать 150 символов' };
+        }
+        const atIndex = email.indexOf('@');
+        if (atIndex <= 0 || atIndex > 64 || !STRICT_EMAIL_REGEX.test(email)) {
+            return { valid: false, reason: 'Некорректный формат электронной почты (например: name@domain.kz)' };
+        }
+        return { valid: true, reason: 'Формат почты корректен' };
+    }
+
+    function onRegisterEmailInput(input) {
+        const val = input.value.trim();
+        const hint = document.getElementById('regEmailHint');
+        if (!hint) return;
+        if (!val) {
+            hint.className = 'field-hint';
+            hint.textContent = 'На эту почту придёт 6-значный код подтверждения';
+            input.classList.remove('input-invalid');
+            return;
+        }
+        const check = isValidEmailFormat(val);
+        hint.className = 'field-hint ' + (check.valid ? 'success' : 'error');
+        hint.textContent = check.reason;
+        input.classList.toggle('input-invalid', !check.valid);
+    }
+
+    function calculateIinControlDigit(iin) {
+        const w1 = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
+        const w2 = [3, 4, 5, 6, 7, 8, 9, 10, 11, 1, 2];
+        let sum = 0;
+        for (let i = 0; i < 11; i++) {
+            sum += parseInt(iin[i], 10) * w1[i];
+        }
+        let mod = sum % 11;
+        if (mod === 10) {
+            sum = 0;
+            for (let i = 0; i < 11; i++) {
+                sum += parseInt(iin[i], 10) * w2[i];
+            }
+            mod = sum % 11;
+        }
+        return mod;
+    }
+
     function isValidIinFormat(iin) {
-        if (!/^\d{12}$/.test(iin)) return { valid: false, reason: 'ИИН должен состоять ровно из 12 цифр' };
+        if (!/^\d{12}$/.test(iin)) {
+            return { valid: false, reason: 'ИИН должен состоять ровно из 12 цифр' };
+        }
         const yy = parseInt(iin.slice(0, 2), 10);
         const mm = parseInt(iin.slice(2, 4), 10);
         const dd = parseInt(iin.slice(4, 6), 10);
         const centuryDigit = parseInt(iin[6], 10);
-        let centuryBase;
+
+        let centuryBase = -1;
         if (centuryDigit === 1 || centuryDigit === 2) centuryBase = 1800;
         else if (centuryDigit === 3 || centuryDigit === 4) centuryBase = 1900;
         else if (centuryDigit === 5 || centuryDigit === 6) centuryBase = 2000;
-        else centuryBase = yy === 0 ? 2000 : 1900;
+
+        if (centuryBase === -1) {
+            return { valid: false, reason: 'Некорректная 7-я цифра ИИН (век и пол должны быть от 1 до 6)' };
+        }
 
         const year = centuryBase + yy;
-        const date = new Date(year, mm - 1, dd);
-        const dateValid = date.getFullYear() === year && date.getMonth() === mm - 1 && date.getDate() === dd;
+        const birthDate = new Date(year, mm - 1, dd);
+        const dateValid = birthDate.getFullYear() === year
+            && birthDate.getMonth() === mm - 1
+            && birthDate.getDate() === dd;
         if (!dateValid) {
             return { valid: false, reason: 'Некорректная дата рождения в первых 6 цифрах ИИН (ГГММДД)' };
         }
-        return { valid: true, reason: 'Формат ИИН корректен (12 цифр)' };
+
+        const now = new Date();
+        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        const minBirthDate = new Date(now.getFullYear() - 100, now.getMonth(), now.getDate());
+
+        if (birthDate > today) {
+            return { valid: false, reason: 'Дата рождения в ИИН не может быть в будущем' };
+        }
+        if (birthDate < minBirthDate) {
+            return { valid: false, reason: `Некорректный год рождения в ИИН (${year})` };
+        }
+
+        const expectedControl = calculateIinControlDigit(iin);
+        const actualControl = parseInt(iin[11], 10);
+        if (expectedControl === 10 || expectedControl !== actualControl) {
+            return { valid: false, reason: 'Некорректный ИИН: неверная контрольная (12-я) цифра' };
+        }
+
+        return { valid: true, reason: 'ИИН корректен (дата и контрольная цифра РК)' };
     }
 
     function onRegisterIinInput(input) {
@@ -2116,16 +2540,85 @@
     }
 
     function updatePasswordStrengthUI(password) {
-        const fill = document.getElementById('passwordStrengthFill');
-        const meta = document.getElementById('passwordStrengthMeta');
-        const label = document.getElementById('passwordStrengthLabel');
-        const ratio = document.getElementById('passwordStrengthRatio');
+        renderStrengthBar(
+            password,
+            'passwordStrengthFill',
+            'passwordStrengthMeta',
+            'passwordStrengthLabel',
+            'passwordStrengthRatio',
+            'Введите пароль для оценки надёжности'
+        );
+    }
+
+    function updatePwdResetStrengthUI(password) {
+        renderStrengthBar(
+            password,
+            'pwdResetStrengthFill',
+            'pwdResetStrengthMeta',
+            'pwdResetStrengthLabel',
+            'pwdResetStrengthRatio',
+            'Введите новый пароль для оценки надёжности'
+        );
+    }
+
+    function onRegConfirmPasswordInput() {
+        const pass = document.getElementById('regPassword')?.value || '';
+        const confirmInput = document.getElementById('regConfirmPassword');
+        const hint = document.getElementById('regConfirmPasswordHint');
+        if (!confirmInput || !hint) return;
+        const confirmVal = confirmInput.value;
+        if (!confirmVal) {
+            hint.className = 'field-hint';
+            hint.textContent = 'Повторите пароль для проверки на опечатки';
+            confirmInput.classList.remove('input-invalid');
+            return;
+        }
+        if (pass === confirmVal) {
+            hint.className = 'field-hint success';
+            hint.textContent = 'Пароли совпадают';
+            confirmInput.classList.remove('input-invalid');
+        } else {
+            hint.className = 'field-hint error';
+            hint.textContent = 'Пароли не совпадают';
+            confirmInput.classList.add('input-invalid');
+        }
+    }
+
+    function onPwdResetConfirmPasswordInput() {
+        const pass = document.getElementById('pwdResetNewPassword')?.value || '';
+        const confirmInput = document.getElementById('pwdResetConfirmPassword');
+        const hint = document.getElementById('pwdResetConfirmPasswordHint');
+        if (!confirmInput || !hint) return;
+        const confirmVal = confirmInput.value;
+        if (!confirmVal) {
+            hint.className = 'field-hint';
+            hint.textContent = 'Пароли должны совпадать';
+            confirmInput.classList.remove('input-invalid');
+            return;
+        }
+        if (pass === confirmVal) {
+            hint.className = 'field-hint success';
+            hint.textContent = 'Пароли совпадают';
+            confirmInput.classList.remove('input-invalid');
+        } else {
+            hint.className = 'field-hint error';
+            hint.textContent = 'Пароли не совпадают';
+            confirmInput.classList.add('input-invalid');
+        }
+    }
+
+    function renderStrengthBar(password, fillId, metaId, labelId, ratioId, emptyText) {
+        const fill = document.getElementById(fillId);
+        const meta = document.getElementById(metaId);
+        const label = document.getElementById(labelId);
+        const ratio = document.getElementById(ratioId);
+        if (!fill || !meta || !label || !ratio) return;
 
         const level = evaluatePasswordStrength(password);
         if (level === 'EMPTY') {
             fill.className = 'strength-fill';
             meta.className = 'strength-meta empty';
-            label.textContent = 'Введите пароль для оценки надёжности';
+            label.textContent = emptyText;
             ratio.textContent = '';
         } else if (level === 'WEAK') {
             fill.className = 'strength-fill weak';
@@ -2299,6 +2792,340 @@
         switchAuthTab('login');
     }
 
+    // ==================== ВОССТАНОВЛЕНИЕ ПАРОЛЯ (PASSWORD RESET) ====================
+    function openPasswordResetModal() {
+        clearPwdResetCooldownTimer();
+        hideBoxAlert('pwdResetAlert');
+
+        pwdResetState.verifiedCode = '';
+        pwdResetState.submittingOtp = false;
+        pwdResetState.attemptsExhausted = false;
+
+        const loginIinVal = document.getElementById('loginIin')?.value.trim() || '';
+        document.getElementById('pwdResetIin').value = loginIinVal;
+        document.getElementById('pwdResetCodeInput').value = '';
+        document.getElementById('pwdResetCodeInput').disabled = false;
+        document.getElementById('pwdResetNewPassword').value = '';
+        document.getElementById('pwdResetConfirmPassword').value = '';
+        updatePwdResetStrengthUI('');
+        onPwdResetConfirmPasswordInput();
+
+        document.getElementById('pwdResetSubtitle').innerHTML =
+            'Введите ваш ИИН, чтобы получить 6-значный код восстановления на привязанную почту.';
+        document.getElementById('pwdResetStep1').classList.remove('hidden');
+        document.getElementById('pwdResetStep2').classList.add('hidden');
+        document.getElementById('pwdResetStep3').classList.add('hidden');
+        document.getElementById('passwordResetModal').classList.add('open');
+
+        setTimeout(() => document.getElementById('pwdResetIin').focus(), 50);
+    }
+
+    function closePasswordResetModal() {
+        clearPwdResetCooldownTimer();
+        hideBoxAlert('pwdResetAlert');
+        document.getElementById('passwordResetModal').classList.remove('open');
+    }
+
+    function clearPwdResetCooldownTimer() {
+        if (pwdResetState.autoSubmitTimer) {
+            clearTimeout(pwdResetState.autoSubmitTimer);
+            pwdResetState.autoSubmitTimer = null;
+        }
+        if (pwdResetState.cooldownTimer) {
+            clearInterval(pwdResetState.cooldownTimer);
+            pwdResetState.cooldownTimer = null;
+        }
+    }
+
+    function startPwdResetCooldown(seconds) {
+        if (pwdResetState.cooldownTimer) {
+            clearInterval(pwdResetState.cooldownTimer);
+            pwdResetState.cooldownTimer = null;
+        }
+        pwdResetState.cooldownSeconds = Math.max(0, seconds);
+        renderPwdResetResendBtn();
+
+        if (pwdResetState.cooldownSeconds > 0) {
+            pwdResetState.cooldownTimer = setInterval(() => {
+                pwdResetState.cooldownSeconds--;
+                if (pwdResetState.cooldownSeconds <= 0) {
+                    pwdResetState.cooldownSeconds = 0;
+                    clearInterval(pwdResetState.cooldownTimer);
+                    pwdResetState.cooldownTimer = null;
+                }
+                renderPwdResetResendBtn();
+            }, 1000);
+        }
+    }
+
+    function renderPwdResetResendBtn() {
+        const btn = document.getElementById('pwdResetResendBtn');
+        if (!btn) return;
+        if (pwdResetState.cooldownSeconds > 0) {
+            btn.disabled = true;
+            btn.textContent = `Отправить повторно (${pwdResetState.cooldownSeconds} с)`;
+        } else {
+            btn.disabled = false;
+            btn.textContent = 'Отправить повторно';
+        }
+    }
+
+    function updatePwdResetResendsHint() {
+        const el = document.getElementById('pwdResetResendsHint');
+        if (el) {
+            el.textContent = `Доступно повторных отправок кода: ${pwdResetState.remainingResends} из 3`;
+        }
+    }
+
+    async function handlePasswordResetInit() {
+        hideBoxAlert('pwdResetAlert');
+        const iin = document.getElementById('pwdResetIin').value.trim();
+        if (!/^\d{12}$/.test(iin)) {
+            showBoxAlert('pwdResetAlert', 'error', 'Введите корректный ИИН — строго 12 цифр.');
+            return;
+        }
+
+        const btn = document.getElementById('pwdResetInitBtn');
+        btn.disabled = true;
+        btn.textContent = 'Отправка...';
+
+        try {
+            const res = await fetch('/auth/password-reset/init', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ iin })
+            });
+            const data = await res.json().catch(() => ({}));
+
+            if (!res.ok) {
+                showBoxAlert('pwdResetAlert', 'error', escapeHtml(data.message || 'Не удалось отправить код восстановления'));
+                return;
+            }
+
+            pwdResetState.iin = iin;
+            pwdResetState.verifiedCode = '';
+            pwdResetState.maskedEmail = data.maskedEmail || '***';
+            pwdResetState.remainingResends = data.remainingResends ?? 3;
+            pwdResetState.attemptsExhausted = false;
+
+            document.getElementById('pwdResetSubtitle').innerHTML =
+                `Код отправлен на почту <span class="otp-email-pill">${escapeHtml(pwdResetState.maskedEmail)}</span>`;
+            document.getElementById('pwdResetStep1').classList.add('hidden');
+            document.getElementById('pwdResetStep2').classList.remove('hidden');
+            document.getElementById('pwdResetStep3').classList.add('hidden');
+
+            const codeInput = document.getElementById('pwdResetCodeInput');
+            codeInput.value = '';
+            codeInput.disabled = false;
+            document.getElementById('pwdResetOtpStatusHint').textContent =
+                'После ввода 6 цифр код будет проверен автоматически через 1 секунду';
+            updatePwdResetResendsHint();
+            startPwdResetCooldown(data.cooldownSeconds || 60);
+
+            setTimeout(() => codeInput.focus(), 50);
+        } catch (err) {
+            showBoxAlert('pwdResetAlert', 'error', 'Ошибка соединения с сервером.');
+        } finally {
+            btn.disabled = false;
+            btn.textContent = 'Получить код';
+        }
+    }
+
+    function onPwdResetOtpInput(input) {
+        onDigitsOnlyInput(input, 6);
+        if (pwdResetState.autoSubmitTimer) {
+            clearTimeout(pwdResetState.autoSubmitTimer);
+            pwdResetState.autoSubmitTimer = null;
+        }
+
+        const val = input.value;
+        const hint = document.getElementById('pwdResetOtpStatusHint');
+        if (val.length === 6 && !pwdResetState.submittingOtp && !pwdResetState.attemptsExhausted) {
+            hint.textContent = 'Код введён. Автоматическая проверка через 1 секунду...';
+            pwdResetState.autoSubmitTimer = setTimeout(() => {
+                pwdResetState.autoSubmitTimer = null;
+                verifyPasswordResetOtp();
+            }, 1000);
+        } else {
+            hint.textContent = 'После ввода 6 цифр код будет проверен автоматически через 1 секунду';
+        }
+    }
+
+    async function verifyPasswordResetOtp() {
+        if (pwdResetState.submittingOtp) return;
+        hideBoxAlert('pwdResetAlert');
+
+        const input = document.getElementById('pwdResetCodeInput');
+        const code = input.value.trim();
+        if (!/^\d{6}$/.test(code)) {
+            showBoxAlert('pwdResetAlert', 'error', 'Введите 6-значный код подтверждения из письма.');
+            return;
+        }
+
+        pwdResetState.submittingOtp = true;
+        input.disabled = true;
+        const verifyBtn = document.getElementById('pwdResetVerifyOtpBtn');
+        if (verifyBtn) verifyBtn.disabled = true;
+        document.getElementById('pwdResetOtpStatusHint').textContent = 'Проверка кода на сервере...';
+
+        try {
+            const res = await fetch('/auth/password-reset/verify-otp', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    iin: pwdResetState.iin,
+                    code
+                })
+            });
+            const data = await res.json().catch(() => ({}));
+
+            if (res.ok) {
+                pwdResetState.verifiedCode = code;
+                clearPwdResetCooldownTimer();
+                hideBoxAlert('pwdResetAlert');
+
+                document.getElementById('pwdResetSubtitle').innerHTML =
+                    `Код подтверждён. Задайте новый пароль для ИИН <b>${escapeHtml(pwdResetState.iin)}</b> и повторите его.`;
+                document.getElementById('pwdResetStep2').classList.add('hidden');
+                document.getElementById('pwdResetStep3').classList.remove('hidden');
+                document.getElementById('pwdResetNewPassword').value = '';
+                document.getElementById('pwdResetConfirmPassword').value = '';
+                updatePwdResetStrengthUI('');
+                onPwdResetConfirmPasswordInput();
+
+                setTimeout(() => document.getElementById('pwdResetNewPassword').focus(), 50);
+                return;
+            }
+
+            if (data.code === 'OTP_ATTEMPTS_EXCEEDED') {
+                pwdResetState.attemptsExhausted = true;
+                input.value = '';
+                input.disabled = true;
+                showBoxAlert('pwdResetAlert', 'error', escapeHtml(data.message || 'Неверный код 5 раз подряд. Запросите новый код.'));
+                document.getElementById('pwdResetOtpStatusHint').textContent = 'Нажмите «Отправить повторно», чтобы получить новый код';
+                return;
+            }
+
+            if (data.code === 'PASSWORD_RESET_BLOCKED' || res.status === 429) {
+                input.value = '';
+                input.disabled = true;
+                showBoxAlert('pwdResetAlert', 'error', escapeHtml(data.message || 'Превышен лимит попыток восстановления. Попробуйте через 1 час.'));
+                return;
+            }
+
+            input.disabled = false;
+            input.value = '';
+            showBoxAlert('pwdResetAlert', 'error', escapeHtml(data.message || 'Неверный код подтверждения'));
+            document.getElementById('pwdResetOtpStatusHint').textContent = 'Введите 6-значный код повторно';
+            input.focus();
+        } catch (err) {
+            input.disabled = false;
+            showBoxAlert('pwdResetAlert', 'error', 'Ошибка сети при проверке кода.');
+        } finally {
+            pwdResetState.submittingOtp = false;
+            if (verifyBtn) verifyBtn.disabled = false;
+        }
+    }
+
+    async function resendPasswordResetOtp() {
+        hideBoxAlert('pwdResetAlert');
+        const btn = document.getElementById('pwdResetResendBtn');
+        btn.disabled = true;
+        btn.textContent = 'Отправка...';
+
+        try {
+            const res = await fetch('/auth/password-reset/resend-otp', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ iin: pwdResetState.iin })
+            });
+            const data = await res.json().catch(() => ({}));
+
+            if (!res.ok) {
+                showBoxAlert('pwdResetAlert', 'error', escapeHtml(data.message || 'Не удалось повторно отправить код'));
+                renderPwdResetResendBtn();
+                return;
+            }
+
+            pwdResetState.attemptsExhausted = false;
+            pwdResetState.remainingResends = data.remainingResends ?? Math.max(0, pwdResetState.remainingResends - 1);
+            updatePwdResetResendsHint();
+            const input = document.getElementById('pwdResetCodeInput');
+            input.disabled = false;
+            input.value = '';
+            input.focus();
+            document.getElementById('pwdResetOtpStatusHint').textContent =
+                'После ввода 6 цифр код будет проверен автоматически через 1 секунду';
+            showBoxAlert('pwdResetAlert', 'success', escapeHtml(data.message || 'Новый код отправлен на почту'));
+            startPwdResetCooldown(data.cooldownSeconds || 60);
+        } catch (err) {
+            showBoxAlert('pwdResetAlert', 'error', 'Ошибка сети при повторной отправке кода.');
+            renderPwdResetResendBtn();
+        }
+    }
+
+    async function handlePasswordResetConfirm() {
+        hideBoxAlert('pwdResetAlert');
+        const code = pwdResetState.verifiedCode || document.getElementById('pwdResetCodeInput').value.trim();
+        const newPassword = document.getElementById('pwdResetNewPassword').value;
+        const confirmPassword = document.getElementById('pwdResetConfirmPassword').value;
+
+        if (!/^\d{6}$/.test(code)) {
+            showBoxAlert('pwdResetAlert', 'error', 'Код подтверждения не найден. Повторите проверку кода.');
+            return;
+        }
+        if (evaluatePasswordStrength(newPassword) === 'WEAK' || !newPassword) {
+            showBoxAlert('pwdResetAlert', 'error', 'Пароль должен содержать минимум 8 символов, заглавные и строчные буквы, а также цифры.');
+            return;
+        }
+        if (newPassword !== confirmPassword) {
+            showBoxAlert('pwdResetAlert', 'error', 'Пароли не совпадают. Проверьте правильность ввода.');
+            document.getElementById('pwdResetConfirmPassword').classList.add('input-invalid');
+            return;
+        }
+
+        const btn = document.getElementById('pwdResetConfirmBtn');
+        btn.disabled = true;
+        btn.textContent = 'Сохранение...';
+
+        try {
+            const res = await fetch('/auth/password-reset/confirm', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    iin: pwdResetState.iin,
+                    code,
+                    newPassword,
+                    confirmPassword
+                })
+            });
+            const data = await res.json().catch(() => ({}));
+
+            if (!res.ok) {
+                showBoxAlert('pwdResetAlert', 'error', escapeHtml(data.message || 'Не удалось изменить пароль'));
+                return;
+            }
+
+            closePasswordResetModal();
+            switchAuthTab('login');
+            document.getElementById('loginIin').value = pwdResetState.iin;
+            document.getElementById('loginPassword').value = '';
+            document.getElementById('loginPassword').focus();
+
+            showBoxAlert(
+                'loginAlert',
+                'success',
+                `<b>Пароль успешно изменён в базе данных!</b> ${escapeHtml(data.message || 'Войдите в систему с новым паролем.')}`
+            );
+            showToast('success', 'Пароль обновлён', 'Теперь вы можете войти в систему с новым паролем.');
+        } catch (err) {
+            showBoxAlert('pwdResetAlert', 'error', 'Ошибка сети при смене пароля.');
+        } finally {
+            btn.disabled = false;
+            btn.textContent = 'Сменить пароль';
+        }
+    }
+
     // ==================== РЕГИСТРАЦИЯ + МОДАЛЬНОЕ ОКНО OTP ====================
     async function handleRegisterInit(e) {
         e.preventDefault();
@@ -2310,12 +3137,21 @@
         const role = document.getElementById('regRole').value;
         const email = document.getElementById('regEmail').value.trim();
         const password = document.getElementById('regPassword').value;
+        const confirmPassword = document.getElementById('regConfirmPassword').value;
         const regionId = document.getElementById('regRegion').value;
         const departmentIdRaw = document.getElementById('regDepartment').value;
         const positionIdRaw = document.getElementById('regPosition').value;
 
-        if (!lastName || !firstName) {
-            showBoxAlert('registerAlert', 'error', 'Укажите фамилию и имя.');
+        const lastNameCheck = isValidPersonName(lastName, 'Фамилия');
+        if (!lastNameCheck.valid) {
+            showBoxAlert('registerAlert', 'error', escapeHtml(lastNameCheck.reason));
+            document.getElementById('regLastName').classList.add('input-invalid');
+            return;
+        }
+        const firstNameCheck = isValidPersonName(firstName, 'Имя');
+        if (!firstNameCheck.valid) {
+            showBoxAlert('registerAlert', 'error', escapeHtml(firstNameCheck.reason));
+            document.getElementById('regFirstName').classList.add('input-invalid');
             return;
         }
         const iinCheck = isValidIinFormat(iin);
@@ -2323,12 +3159,19 @@
             showBoxAlert('registerAlert', 'error', escapeHtml(iinCheck.reason));
             return;
         }
-        if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-            showBoxAlert('registerAlert', 'error', 'Укажите корректный адрес электронной почты.');
+        const emailCheck = isValidEmailFormat(email);
+        if (!emailCheck.valid) {
+            showBoxAlert('registerAlert', 'error', escapeHtml(emailCheck.reason));
+            document.getElementById('regEmail').classList.add('input-invalid');
             return;
         }
         if (evaluatePasswordStrength(password) === 'WEAK' || !password) {
             showBoxAlert('registerAlert', 'error', 'Пароль должен содержать минимум 8 символов, заглавные и строчные буквы, а также цифры.');
+            return;
+        }
+        if (password !== confirmPassword) {
+            showBoxAlert('registerAlert', 'error', 'Пароли не совпадают. Пожалуйста, повторите пароль без опечаток.');
+            document.getElementById('regConfirmPassword').classList.add('input-invalid');
             return;
         }
         if (!regionId || !departmentIdRaw || !positionIdRaw) {
@@ -2502,8 +3345,21 @@
                 closeOtpModal(false);
                 document.getElementById('registerForm').reset();
                 updatePasswordStrengthUI('');
+                document.getElementById('regLastNameHint').textContent = 'Только буквы (без цифр и спецсимволов)';
+                document.getElementById('regLastNameHint').className = 'field-hint';
+                document.getElementById('regLastName').classList.remove('input-invalid');
+                document.getElementById('regFirstNameHint').textContent = 'Только буквы (без цифр и спецсимволов)';
+                document.getElementById('regFirstNameHint').className = 'field-hint';
+                document.getElementById('regFirstName').classList.remove('input-invalid');
                 document.getElementById('regIinHint').textContent = 'Строго 12 цифр (ГГММДД...)';
                 document.getElementById('regIinHint').className = 'field-hint';
+                document.getElementById('regIin').classList.remove('input-invalid');
+                document.getElementById('regEmailHint').textContent = 'На эту почту придёт 6-значный код подтверждения';
+                document.getElementById('regEmailHint').className = 'field-hint';
+                document.getElementById('regEmail').classList.remove('input-invalid');
+                document.getElementById('regConfirmPasswordHint').textContent = 'Повторите пароль для проверки на опечатки';
+                document.getElementById('regConfirmPasswordHint').className = 'field-hint';
+                document.getElementById('regConfirmPassword').classList.remove('input-invalid');
 
                 switchAuthTab('login');
                 if (data.iin) {
@@ -2892,22 +3748,27 @@
         }
     }
 
-    async function rejectPendingUser(id) {
-        try {
-            const res = await fetch(`/admin/registrations/${id}/reject`, {
-                method: 'POST',
-                headers: authHeaders()
-            });
-            const data = await res.json().catch(() => ({}));
-            if (!res.ok) {
-                showToast('error', `${res.status} — ${data.code || 'ERROR'}`, data.message || 'Не удалось отклонить заявку');
-                return;
+    function rejectPendingUser(id) {
+        const u = pendingRegistrations.find(x => x.id === id) || { id, fullName: 'Пользователь', iin: '—' };
+        openConfirmModal({
+            title: 'Отклонение заявки',
+            htmlText: `Вы уверены, что хотите отклонить заявку <b>${escapeHtml(u.fullName)} (ИИН: ${escapeHtml(u.iin || '—')})</b>? Данный ИИН и Email будут заблокированы для повторной регистрации.`,
+            confirmLabel: 'Да, отклонить',
+            variant: 'danger',
+            onConfirm: async () => {
+                const res = await fetch(`/admin/registrations/${id}/reject`, {
+                    method: 'POST',
+                    headers: authHeaders()
+                });
+                const data = await res.json().catch(() => ({}));
+                if (!res.ok) {
+                    showToast('error', `${res.status} — ${data.code || 'ERROR'}`, data.message || 'Не удалось отклонить заявку');
+                    return;
+                }
+                showToast('success', 'Заявка отклонена', `Заявка пользователя ${data.fullName} отклонена (REJECTED)`);
+                await loadPendingRegistrations();
             }
-            showToast('success', 'Заявка отклонена', `Заявка пользователя ${data.fullName} отклонена (REJECTED)`);
-            await loadPendingRegistrations();
-        } catch (err) {
-            showToast('error', 'Ошибка сети', 'Не удалось выполнить запрос');
-        }
+        });
     }
 
     async function loadAdminUsers() {
@@ -2957,7 +3818,12 @@
                         <div style="font-size:12px; color:#475569;">ИИН: <b>${escapeHtml(u.iin || '—')}</b></div>
                         <div style="font-size:12px; color:#64748b;">${escapeHtml(u.email || '—')}</div>
                     </td>
-                    <td><span class="role-tag ${escapeHtml(u.role)}">${escapeHtml(u.role)}</span></td>
+                    <td>
+                        <select class="role-inline-select ${escapeHtml(u.role)}" onchange="onTableRoleSelectChange(this, ${u.id}, '${escapeHtml(u.role)}')">
+                            <option value="INVESTIGATOR" ${u.role === 'INVESTIGATOR' ? 'selected' : ''}>INVESTIGATOR</option>
+                            <option value="SUPPORT" ${u.role === 'SUPPORT' ? 'selected' : ''}>SUPPORT</option>
+                        </select>
+                    </td>
                     <td>${u.region ? escapeHtml(u.region.id + ' - ' + u.region.name) : '—'}</td>
                     <td>
                         <div style="font-size:13px; color:#0f172a;">${u.department ? escapeHtml(u.department.name) : '—'}</div>
@@ -2984,11 +3850,12 @@
         if (!u) return;
 
         hideBoxAlert('editUserAlert');
+        editModalOriginalRole = u.role || 'INVESTIGATOR';
         document.getElementById('editUserId').value = String(u.id);
         document.getElementById('editUserSubtitle').textContent = `ИИН: ${u.iin || '—'} · Email: ${u.email || '—'}`;
         document.getElementById('editLastName').value = u.lastName || '';
         document.getElementById('editFirstName').value = u.firstName || '';
-        document.getElementById('editRole').value = u.role || 'INVESTIGATOR';
+        document.getElementById('editRole').value = editModalOriginalRole;
         document.getElementById('editRegion').value = u.region ? u.region.id : (dictionaries.regions[0]?.id || '');
         document.getElementById('editDepartment').value = u.department ? String(u.department.id) : '';
         document.getElementById('editPosition').value = u.position ? String(u.position.id) : '';
@@ -3000,7 +3867,111 @@
         document.getElementById('editUserModal').classList.remove('open');
     }
 
+    function onEditModalRoleChange(selectEl) {
+        const id = Number(document.getElementById('editUserId').value);
+        const u = adminUsersList.find(x => x.id === id);
+        const oldRole = editModalOriginalRole || (u ? u.role : 'INVESTIGATOR');
+        const newRole = selectEl.value;
+        if (!u || newRole === oldRole) return;
+
+        const fullNameDisplay = `${document.getElementById('editLastName').value.trim()} ${document.getElementById('editFirstName').value.trim()}`.trim() || u.fullName;
+
+        openConfirmModal({
+            title: 'Изменение роли сотрудника',
+            htmlText: `Вы уверены, что хотите изменить роль пользователя <b>${escapeHtml(fullNameDisplay)}</b> с <b>${escapeHtml(oldRole)}</b> на <b>${escapeHtml(newRole)}</b>?`,
+            confirmLabel: 'Да, изменить роль',
+            variant: 'primary',
+            onConfirm: async () => {
+                await performSaveEditedUser();
+            },
+            onCancel: () => {
+                selectEl.value = oldRole;
+            }
+        });
+    }
+
+    function onTableRoleSelectChange(selectEl, userId, oldRole) {
+        const u = adminUsersList.find(x => x.id === userId);
+        const newRole = selectEl.value;
+        if (!u || newRole === oldRole) return;
+
+        openConfirmModal({
+            title: 'Изменение роли сотрудника',
+            htmlText: `Вы уверены, что хотите изменить роль пользователя <b>${escapeHtml(u.fullName)}</b> с <b>${escapeHtml(oldRole)}</b> на <b>${escapeHtml(newRole)}</b>?`,
+            confirmLabel: 'Да, изменить роль',
+            variant: 'primary',
+            onConfirm: async () => {
+                const payload = {
+                    firstName: u.firstName,
+                    lastName: u.lastName,
+                    role: newRole,
+                    regionId: u.region ? u.region.id : null,
+                    departmentId: u.department ? Number(u.department.id) : null,
+                    positionId: u.position ? Number(u.position.id) : null
+                };
+                const res = await fetch(`/admin/users/${userId}`, {
+                    method: 'PUT',
+                    headers: authHeaders({ 'Content-Type': 'application/json' }),
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json().catch(() => ({}));
+                if (!res.ok) {
+                    selectEl.value = oldRole;
+                    showToast('error', `${res.status} — ${data.code || 'ERROR'}`, data.message || 'Ошибка изменения роли');
+                    return;
+                }
+                showToast('success', 'Роль изменена', `Роль сотрудника ${data.fullName} изменена на ${data.role}`);
+                await loadAdminUsers();
+            },
+            onCancel: () => {
+                selectEl.value = oldRole;
+            }
+        });
+    }
+
     async function saveEditedUser() {
+        hideBoxAlert('editUserAlert');
+        const firstName = document.getElementById('editFirstName').value.trim();
+        const lastName = document.getElementById('editLastName').value.trim();
+        const role = document.getElementById('editRole').value;
+        const regionId = document.getElementById('editRegion').value;
+
+        const lastNameCheck = isValidPersonName(lastName, 'Фамилия');
+        if (!lastNameCheck.valid) {
+            showBoxAlert('editUserAlert', 'error', escapeHtml(lastNameCheck.reason));
+            return;
+        }
+        const firstNameCheck = isValidPersonName(firstName, 'Имя');
+        if (!firstNameCheck.valid) {
+            showBoxAlert('editUserAlert', 'error', escapeHtml(firstNameCheck.reason));
+            return;
+        }
+        if (!regionId) {
+            showBoxAlert('editUserAlert', 'error', 'Выберите регион РК.');
+            return;
+        }
+
+        if (editModalOriginalRole && role !== editModalOriginalRole) {
+            const fullNameDisplay = `${lastName} ${firstName}`.trim();
+            openConfirmModal({
+                title: 'Изменение роли сотрудника',
+                htmlText: `Вы уверены, что хотите изменить роль пользователя <b>${escapeHtml(fullNameDisplay)}</b> с <b>${escapeHtml(editModalOriginalRole)}</b> на <b>${escapeHtml(role)}</b>?`,
+                confirmLabel: 'Да, изменить роль',
+                variant: 'primary',
+                onConfirm: async () => {
+                    await performSaveEditedUser();
+                },
+                onCancel: () => {
+                    document.getElementById('editRole').value = editModalOriginalRole;
+                }
+            });
+            return;
+        }
+
+        await performSaveEditedUser();
+    }
+
+    async function performSaveEditedUser() {
         hideBoxAlert('editUserAlert');
         const id = document.getElementById('editUserId').value;
         const firstName = document.getElementById('editFirstName').value.trim();
@@ -3010,8 +3981,18 @@
         const departmentIdVal = document.getElementById('editDepartment').value;
         const positionIdVal = document.getElementById('editPosition').value;
 
-        if (!firstName || !lastName || !regionId) {
-            showBoxAlert('editUserAlert', 'error', 'Фамилия, имя и регион обязательны.');
+        const lastNameCheck = isValidPersonName(lastName, 'Фамилия');
+        if (!lastNameCheck.valid) {
+            showBoxAlert('editUserAlert', 'error', escapeHtml(lastNameCheck.reason));
+            return;
+        }
+        const firstNameCheck = isValidPersonName(firstName, 'Имя');
+        if (!firstNameCheck.valid) {
+            showBoxAlert('editUserAlert', 'error', escapeHtml(firstNameCheck.reason));
+            return;
+        }
+        if (!regionId) {
+            showBoxAlert('editUserAlert', 'error', 'Выберите регион РК.');
             return;
         }
 
@@ -3037,6 +4018,7 @@
                 showBoxAlert('editUserAlert', 'error', escapeHtml(data.message || 'Ошибка сохранения профиля'));
                 return;
             }
+            editModalOriginalRole = data.role;
             closeEditUserModal();
             showToast('success', 'Профиль обновлён', `Данные сотрудника ${data.fullName} сохранены`);
             await loadAdminUsers();
@@ -3047,39 +4029,115 @@
         }
     }
 
-    async function blockUser(id) {
-        try {
-            const res = await fetch(`/admin/users/${id}/block`, {
-                method: 'POST',
-                headers: authHeaders()
-            });
-            const data = await res.json().catch(() => ({}));
-            if (!res.ok) {
-                showToast('error', `${res.status} — ${data.code || 'ERROR'}`, data.message || 'Ошибка блокировки');
-                return;
+    function blockUser(id) {
+        const u = adminUsersList.find(x => x.id === id) || { id, fullName: 'Пользователь', iin: '—' };
+        openConfirmModal({
+            title: 'Подтверждение блокировки',
+            htmlText: `Вы уверены, что хотите заблокировать пользователя <b>${escapeHtml(u.fullName)} (ИИН: ${escapeHtml(u.iin || '—')})</b>? Он немедленно потеряет доступ к системе.`,
+            confirmLabel: 'Да, заблокировать',
+            variant: 'danger',
+            onConfirm: async () => {
+                const res = await fetch(`/admin/users/${id}/block`, {
+                    method: 'POST',
+                    headers: authHeaders()
+                });
+                const data = await res.json().catch(() => ({}));
+                if (!res.ok) {
+                    showToast('error', `${res.status} — ${data.code || 'ERROR'}`, data.message || 'Ошибка блокировки');
+                    return;
+                }
+                showToast('success', 'Пользователь заблокирован', `${data.fullName} переведён в статус BLOCKED`);
+                await loadAdminUsers();
             }
-            showToast('success', 'Пользователь заблокирован', `${data.fullName} переведён в статус BLOCKED`);
-            await loadAdminUsers();
-        } catch (err) {
-            showToast('error', 'Ошибка сети', 'Не удалось заблокировать пользователя');
+        });
+    }
+
+    function unblockUser(id) {
+        const u = adminUsersList.find(x => x.id === id) || { id, fullName: 'Пользователь', iin: '—' };
+        openConfirmModal({
+            title: 'Снятие блокировки',
+            htmlText: `Вы уверены, что хотите разблокировать пользователя <b>${escapeHtml(u.fullName)} (ИИН: ${escapeHtml(u.iin || '—')})</b> и вернуть ему доступ в систему?`,
+            confirmLabel: 'Да, разблокировать',
+            variant: 'success',
+            onConfirm: async () => {
+                const res = await fetch(`/admin/users/${id}/unblock`, {
+                    method: 'POST',
+                    headers: authHeaders()
+                });
+                const data = await res.json().catch(() => ({}));
+                if (!res.ok) {
+                    showToast('error', `${res.status} — ${data.code || 'ERROR'}`, data.message || 'Ошибка разблокировки');
+                    return;
+                }
+                showToast('success', 'Пользователь разблокирован', `${data.fullName} снова активен (ACTIVE)`);
+                await loadAdminUsers();
+            }
+        });
+    }
+
+    // ==================== КАСТОМНОЕ МОДАЛЬНОЕ ОКНО ПОДТВЕРЖДЕНИЯ ====================
+    function openConfirmModal({ title, htmlText, confirmLabel, variant = 'danger', onConfirm, onCancel = null }) {
+        confirmModalState.loading = false;
+        confirmModalState.onConfirm = onConfirm;
+        confirmModalState.onCancel = onCancel;
+
+        document.getElementById('confirmModalTitle').textContent = title || 'Подтверждение действия';
+        document.getElementById('confirmModalText').innerHTML = htmlText || 'Вы уверены?';
+
+        const iconEl = document.getElementById('confirmModalIcon');
+        iconEl.className = 'confirm-icon-badge ' + variant;
+        iconEl.textContent = variant === 'danger' ? '⚠' : (variant === 'success' ? '✓' : '🛡');
+
+        const confirmBtn = document.getElementById('confirmModalConfirmBtn');
+        confirmBtn.className = 'confirm-action-btn ' + variant;
+        confirmBtn.textContent = confirmLabel || 'Да, подтвердить';
+        confirmBtn.disabled = false;
+        confirmBtn.dataset.originalLabel = confirmBtn.textContent;
+
+        const cancelBtn = document.getElementById('confirmModalCancelBtn');
+        cancelBtn.disabled = false;
+
+        document.getElementById('confirmActionModal').classList.add('open');
+    }
+
+    function closeConfirmModal() {
+        confirmModalState.loading = false;
+        confirmModalState.onConfirm = null;
+        confirmModalState.onCancel = null;
+        document.getElementById('confirmActionModal').classList.remove('open');
+    }
+
+    function cancelConfirmModal() {
+        if (confirmModalState.loading) return;
+        const cancelCb = confirmModalState.onCancel;
+        closeConfirmModal();
+        if (typeof cancelCb === 'function') {
+            cancelCb();
         }
     }
 
-    async function unblockUser(id) {
+    function onConfirmBackdropClick(e) {
+        if (e.target && e.target.id === 'confirmActionModal') {
+            cancelConfirmModal();
+        }
+    }
+
+    async function executeConfirmModalAction() {
+        if (confirmModalState.loading || typeof confirmModalState.onConfirm !== 'function') return;
+        confirmModalState.loading = true;
+
+        const confirmBtn = document.getElementById('confirmModalConfirmBtn');
+        const cancelBtn = document.getElementById('confirmModalCancelBtn');
+        confirmBtn.disabled = true;
+        cancelBtn.disabled = true;
+        confirmBtn.textContent = '⏳ Выполняется...';
+
         try {
-            const res = await fetch(`/admin/users/${id}/unblock`, {
-                method: 'POST',
-                headers: authHeaders()
-            });
-            const data = await res.json().catch(() => ({}));
-            if (!res.ok) {
-                showToast('error', `${res.status} — ${data.code || 'ERROR'}`, data.message || 'Ошибка разблокировки');
-                return;
-            }
-            showToast('success', 'Пользователь разблокирован', `${data.fullName} снова активен (ACTIVE)`);
-            await loadAdminUsers();
+            await confirmModalState.onConfirm();
         } catch (err) {
-            showToast('error', 'Ошибка сети', 'Не удалось разблокировать пользователя');
+            showToast('error', 'Ошибка сети', 'Не удалось выполнить операцию');
+        } finally {
+            closeConfirmModal();
         }
     }
 
@@ -3453,6 +4511,15 @@
         window.addEventListener('click', () => {
             const dd = document.getElementById('profileDropdown');
             if (dd) dd.classList.remove('open');
+        });
+
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                const confirmModal = document.getElementById('confirmActionModal');
+                if (confirmModal && confirmModal.classList.contains('open')) {
+                    cancelConfirmModal();
+                }
+            }
         });
 
         await loadDictionaries();
