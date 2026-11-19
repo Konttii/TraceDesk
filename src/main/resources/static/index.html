@@ -1550,6 +1550,24 @@
             border-color: #cbd5e1;
         }
 
+        .role-inline-select.ADMIN {
+            background: #ede9fe;
+            color: #5b21b6;
+            border-color: #c4b5fd;
+        }
+
+        .role-inline-select:disabled {
+            opacity: 0.65;
+            cursor: not-allowed;
+        }
+
+        .self-admin-hint {
+            font-size: 11px;
+            color: #5b21b6;
+            font-weight: 600;
+            margin-top: 4px;
+        }
+
         /* ==================== TOASTS ==================== */
         .toast-container {
             position: fixed;
@@ -2157,6 +2175,7 @@
                 <option value="INVESTIGATOR">Следователь (INVESTIGATOR)</option>
                 <option value="SUPPORT">Оператор (SUPPORT)</option>
             </select>
+            <div class="field-hint hidden" id="editRoleSelfHint">Текущий аккаунт администратора — изменение собственной роли запрещено</div>
         </div>
 
         <div class="form-group">
@@ -3806,20 +3825,33 @@
         }
 
         const now = Date.now();
+        const currentUserId = authState.user ? authState.user.id : null;
+        const selfAdminHint = 'Текущий аккаунт администратора';
+
         tbody.innerHTML = adminUsersList.map(u => {
+            const isCurrentUser = currentUserId !== null && u.id === currentUserId;
             const isTempLocked = u.lockedUntil && new Date(u.lockedUntil).getTime() > now;
-            const canUnblock = u.status === 'BLOCKED' || u.status === 'REJECTED' || isTempLocked;
+            const canUnblock = !isCurrentUser && (u.status === 'BLOCKED' || u.status === 'REJECTED' || isTempLocked);
             const canBlock = u.status !== 'BLOCKED';
 
             return `
                 <tr>
                     <td>
-                        <div style="font-weight:700; color:#0f172a;">${escapeHtml(u.fullName)}</div>
+                        <div style="font-weight:700; color:#0f172a;">
+                            ${escapeHtml(u.fullName)}
+                            ${isCurrentUser ? `<span class="role-tag ADMIN" style="margin-left:6px;" title="${selfAdminHint}">Вы</span>` : ''}
+                        </div>
                         <div style="font-size:12px; color:#475569;">ИИН: <b>${escapeHtml(u.iin || '—')}</b></div>
                         <div style="font-size:12px; color:#64748b;">${escapeHtml(u.email || '—')}</div>
+                        ${isCurrentUser ? `<div class="self-admin-hint">🛡 ${selfAdminHint}</div>` : ''}
                     </td>
                     <td>
-                        <select class="role-inline-select ${escapeHtml(u.role)}" onchange="onTableRoleSelectChange(this, ${u.id}, '${escapeHtml(u.role)}')">
+                        <select
+                            class="role-inline-select ${escapeHtml(u.role)}"
+                            onchange="onTableRoleSelectChange(this, ${u.id}, '${escapeHtml(u.role)}')"
+                            ${isCurrentUser ? `disabled title="${selfAdminHint}"` : ''}
+                        >
+                            ${u.role === 'ADMIN' ? `<option value="ADMIN" selected>ADMIN</option>` : ''}
                             <option value="INVESTIGATOR" ${u.role === 'INVESTIGATOR' ? 'selected' : ''}>INVESTIGATOR</option>
                             <option value="SUPPORT" ${u.role === 'SUPPORT' ? 'selected' : ''}>SUPPORT</option>
                         </select>
@@ -3836,7 +3868,7 @@
                     <td>
                         <div class="table-actions">
                             <button type="button" class="action-pill-btn sm" onclick="openEditUserModal(${u.id})">Изменить</button>
-                            ${canBlock ? `<button type="button" class="action-pill-btn sm danger" onclick="blockUser(${u.id})">Заблокировать</button>` : ''}
+                            ${canBlock ? `<button type="button" class="action-pill-btn sm danger" onclick="blockUser(${u.id})" ${isCurrentUser ? `disabled title="${selfAdminHint}"` : ''}>Заблокировать</button>` : ''}
                             ${canUnblock ? `<button type="button" class="action-pill-btn sm success" onclick="unblockUser(${u.id})">Разблокировать</button>` : ''}
                         </div>
                     </td>
@@ -3849,13 +3881,33 @@
         const u = adminUsersList.find(x => x.id === userId);
         if (!u) return;
 
+        const isCurrentUser = authState.user && u.id === authState.user.id;
         hideBoxAlert('editUserAlert');
         editModalOriginalRole = u.role || 'INVESTIGATOR';
         document.getElementById('editUserId').value = String(u.id);
         document.getElementById('editUserSubtitle').textContent = `ИИН: ${u.iin || '—'} · Email: ${u.email || '—'}`;
         document.getElementById('editLastName').value = u.lastName || '';
         document.getElementById('editFirstName').value = u.firstName || '';
-        document.getElementById('editRole').value = editModalOriginalRole;
+
+        const editRoleSelect = document.getElementById('editRole');
+        const existingAdminOption = editRoleSelect.querySelector('option[value="ADMIN"]');
+        if (u.role === 'ADMIN' && !existingAdminOption) {
+            const adminOpt = document.createElement('option');
+            adminOpt.value = 'ADMIN';
+            adminOpt.textContent = 'Администратор (ADMIN)';
+            editRoleSelect.insertBefore(adminOpt, editRoleSelect.firstChild);
+        } else if (u.role !== 'ADMIN' && existingAdminOption) {
+            existingAdminOption.remove();
+        }
+        editRoleSelect.value = editModalOriginalRole;
+        editRoleSelect.disabled = Boolean(isCurrentUser);
+        editRoleSelect.title = isCurrentUser ? 'Текущий аккаунт администратора' : '';
+
+        const editRoleSelfHint = document.getElementById('editRoleSelfHint');
+        if (editRoleSelfHint) {
+            editRoleSelfHint.classList.toggle('hidden', !isCurrentUser);
+        }
+
         document.getElementById('editRegion').value = u.region ? u.region.id : (dictionaries.regions[0]?.id || '');
         document.getElementById('editDepartment').value = u.department ? String(u.department.id) : '';
         document.getElementById('editPosition').value = u.position ? String(u.position.id) : '';
@@ -3869,6 +3921,11 @@
 
     function onEditModalRoleChange(selectEl) {
         const id = Number(document.getElementById('editUserId').value);
+        if (authState.user && id === authState.user.id) {
+            selectEl.value = editModalOriginalRole || 'ADMIN';
+            showToast('error', 'Действие запрещено', 'Вы не можете изменить собственную роль администратора');
+            return;
+        }
         const u = adminUsersList.find(x => x.id === id);
         const oldRole = editModalOriginalRole || (u ? u.role : 'INVESTIGATOR');
         const newRole = selectEl.value;
@@ -3891,6 +3948,11 @@
     }
 
     function onTableRoleSelectChange(selectEl, userId, oldRole) {
+        if (authState.user && userId === authState.user.id) {
+            selectEl.value = oldRole;
+            showToast('error', 'Действие запрещено', 'Вы не можете изменить собственную роль администратора');
+            return;
+        }
         const u = adminUsersList.find(x => x.id === userId);
         const newRole = selectEl.value;
         if (!u || newRole === oldRole) return;
@@ -4030,6 +4092,10 @@
     }
 
     function blockUser(id) {
+        if (authState.user && id === authState.user.id) {
+            showToast('error', 'Действие запрещено', 'Вы не можете заблокировать собственную учетную запись');
+            return;
+        }
         const u = adminUsersList.find(x => x.id === id) || { id, fullName: 'Пользователь', iin: '—' };
         openConfirmModal({
             title: 'Подтверждение блокировки',

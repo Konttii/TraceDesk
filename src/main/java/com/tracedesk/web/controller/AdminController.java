@@ -84,29 +84,44 @@ public class AdminController {
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Заявка отклонена"),
             @ApiResponse(responseCode = "404", description = "Пользователь не найден"),
-            @ApiResponse(responseCode = "409", description = "Пользователь не находится в статусе PENDING_APPROVAL")
+            @ApiResponse(responseCode = "409", description = "Некорректный статус (INVALID_USER_STATUS), запрет действия над собой (SELF_ACTION_FORBIDDEN) или защита последнего администратора (LAST_ADMIN_PROTECTION)")
     })
     @PostMapping("/registrations/{id}/reject")
-    public ResponseEntity<AdminUserResponse> rejectRegistration(@PathVariable("id") Long id) {
-        return ResponseEntity.ok(adminUserService.rejectRegistration(id));
+    public ResponseEntity<AdminUserResponse> rejectRegistration(
+            @PathVariable("id") Long id,
+            @AuthenticationPrincipal AppUserPrincipal principal
+    ) {
+        return ResponseEntity.ok(adminUserService.rejectRegistration(id, principal != null ? principal.getUser() : null));
     }
 
     @Operation(
             summary = "Редактировать профиль сотрудника",
             description = "Обновляет ФИО, роль, регион, следственное управление и должность сотрудника."
     )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Профиль обновлён"),
+            @ApiResponse(responseCode = "400", description = "Ошибка валидации (VALIDATION_ERROR)"),
+            @ApiResponse(responseCode = "404", description = "Пользователь не найден (USER_NOT_FOUND)"),
+            @ApiResponse(responseCode = "409", description = "Запрет понижения собственной роли (SELF_ACTION_FORBIDDEN) или последнего активного администратора (LAST_ADMIN_PROTECTION)")
+    })
     @PutMapping("/users/{id}")
     public ResponseEntity<AdminUserResponse> updateUserProfile(
             @PathVariable("id") Long id,
-            @RequestBody UpdateUserProfileRequest request
+            @RequestBody UpdateUserProfileRequest request,
+            @AuthenticationPrincipal AppUserPrincipal principal
     ) {
-        return ResponseEntity.ok(adminUserService.updateUserProfile(id, request));
+        return ResponseEntity.ok(adminUserService.updateUserProfile(id, request, principal != null ? principal.getUser() : null));
     }
 
     @Operation(
             summary = "Заблокировать пользователя",
             description = "Переводит учётную запись пользователя в статус BLOCKED."
     )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Пользователь заблокирован"),
+            @ApiResponse(responseCode = "404", description = "Пользователь не найден (USER_NOT_FOUND)"),
+            @ApiResponse(responseCode = "409", description = "Запрет самоблокировки (SELF_ACTION_FORBIDDEN) или блокировки последнего активного администратора (LAST_ADMIN_PROTECTION)")
+    })
     @PostMapping("/users/{id}/block")
     public ResponseEntity<AdminUserResponse> blockUser(
             @PathVariable("id") Long id,

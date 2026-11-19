@@ -49,6 +49,8 @@ class AdminAndRegionalRoutingIntegrationTest {
     private static final String PENDING_EMAIL_1 = "pending1@tracedesk.kz";
     private static final String PENDING_IIN_2 = "990202400666";
     private static final String PENDING_EMAIL_2 = "pending2@tracedesk.kz";
+    private static final String SECOND_ADMIN_IIN = "990303300777";
+    private static final String SECOND_ADMIN_EMAIL = "admin2@tracedesk.kz";
 
     private static final byte[] SYNTHETIC_PNG = new byte[]{
             (byte) 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A,
@@ -94,6 +96,7 @@ class AdminAndRegionalRoutingIntegrationTest {
         ticketRepository.deleteAll();
         userRepository.findByIin(PENDING_IIN_1).ifPresent(userRepository::delete);
         userRepository.findByIin(PENDING_IIN_2).ifPresent(userRepository::delete);
+        userRepository.findByIin(SECOND_ADMIN_IIN).ifPresent(userRepository::delete);
     }
 
     @Test
@@ -300,6 +303,76 @@ class AdminAndRegionalRoutingIntegrationTest {
         mockMvc.perform(get("/tickets/{id}/attachment", astanaTicketId)
                         .with(httpBasic("000000000001", "password")))
                 .andExpect(status().isOk());
+    }
+
+    @Test
+    @DisplayName("Защита администратора: запрет самоблокировки (SELF_ACTION_FORBIDDEN) и понижения роли единственного активного ADMIN (LAST_ADMIN_PROTECTION)")
+    void adminSelfBlockAndLastAdminProtectionTest() throws Exception {
+        User admin = userRepository.findByIin("000000000001").orElseThrow();
+        assertThat(userRepository.countByRoleAndStatus(Role.ADMIN, UserStatus.ACTIVE)).isEqualTo(1L);
+
+        // 1. Попытка администратора заблокировать самого себя -> 409 SELF_ACTION_FORBIDDEN
+        mockMvc.perform(post("/admin/users/{id}/block", admin.getId())
+                        .with(httpBasic("000000000001", "password")))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("SELF_ACTION_FORBIDDEN"));
+
+        User adminAfterBlockAttempt = userRepository.findById(admin.getId()).orElseThrow();
+        assertThat(adminAfterBlockAttempt.getStatus()).isEqualTo(UserStatus.ACTIVE);
+
+        // 2. Попытка администратора отклонить собственную учётную запись -> 409 SELF_ACTION_FORBIDDEN
+        mockMvc.perform(post("/admin/registrations/{id}/reject", admin.getId())
+                        .with(httpBasic("000000000001", "password")))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("SELF_ACTION_FORBIDDEN"));
+
+        // 3. Попытка понизить роль единственного активного ADMIN до SUPPORT -> 409 LAST_ADMIN_PROTECTION
+        UpdateUserProfileRequest demoteSoleAdminReq = new UpdateUserProfileRequest(
+                null,
+                null,
+                Role.SUPPORT,
+                null,
+                null,
+                null
+        );
+        mockMvc.perform(put("/admin/users/{id}", admin.getId())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(demoteSoleAdminReq))
+                        .with(httpBasic("000000000001", "password")))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("LAST_ADMIN_PROTECTION"));
+
+        User adminAfterDemoteAttempt = userRepository.findById(admin.getId()).orElseThrow();
+        assertThat(adminAfterDemoteAttempt.getRole()).isEqualTo(Role.ADMIN);
+
+        // 4. При наличии второго активного ADMIN попытка изменить собственную роль возвращает 409 SELF_ACTION_FORBIDDEN,
+        //    а понижение роли второго ADMIN успешно проходит
+        User secondAdmin = createUser(
+                SECOND_ADMIN_IIN,
+                SECOND_ADMIN_EMAIL,
+                "Дамир",
+                "Алимов",
+                Role.ADMIN,
+                UserStatus.ACTIVE,
+                "01"
+        );
+        assertThat(userRepository.countByRoleAndStatus(Role.ADMIN, UserStatus.ACTIVE)).isEqualTo(2L);
+
+        mockMvc.perform(put("/admin/users/{id}", admin.getId())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(demoteSoleAdminReq))
+                        .with(httpBasic("000000000001", "password")))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("SELF_ACTION_FORBIDDEN"));
+
+        mockMvc.perform(put("/admin/users/{id}", secondAdmin.getId())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(demoteSoleAdminReq))
+                        .with(httpBasic("000000000001", "password")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.role").value("SUPPORT"));
+
+        assertThat(userRepository.countByRoleAndStatus(Role.ADMIN, UserStatus.ACTIVE)).isEqualTo(1L);
     }
 
     private User createUser(

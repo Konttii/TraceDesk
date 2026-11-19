@@ -104,17 +104,24 @@ public class AdminUserService {
     }
 
     @Transactional
-    public AdminUserResponse rejectRegistration(Long id) {
-        User user = getUserOrThrow(id);
-        if (user.getStatus() != UserStatus.PENDING_APPROVAL) {
+    public AdminUserResponse rejectRegistration(Long id, User currentAdmin) {
+        User targetUser = getUserOrThrow(id);
+        if (currentAdmin != null && targetUser.getId().equals(currentAdmin.getId())) {
+            throw new ApiException(
+                    ErrorCode.SELF_ACTION_FORBIDDEN,
+                    "Вы не можете отклонить собственную учетную запись"
+            );
+        }
+        ensureNotLastActiveAdmin(targetUser);
+        if (targetUser.getStatus() != UserStatus.PENDING_APPROVAL) {
             throw new ApiException(
                     ErrorCode.INVALID_USER_STATUS,
-                    "Отклонить можно только заявку в статусе PENDING_APPROVAL (текущий статус: " + user.getStatus() + ")"
+                    "Отклонить можно только заявку в статусе PENDING_APPROVAL (текущий статус: " + targetUser.getStatus() + ")"
             );
         }
 
-        user.setStatus(UserStatus.REJECTED);
-        User saved = userRepository.save(user);
+        targetUser.setStatus(UserStatus.REJECTED);
+        User saved = userRepository.save(targetUser);
 
         String email = saved.getEmail();
         String firstName = saved.getFirstName() != null ? saved.getFirstName() : saved.getFullName();
@@ -128,63 +135,77 @@ public class AdminUserService {
     }
 
     @Transactional
-    public AdminUserResponse updateUserProfile(Long id, UpdateUserProfileRequest request) {
+    public AdminUserResponse updateUserProfile(Long id, UpdateUserProfileRequest request, User currentAdmin) {
         if (request == null) {
             throw new ApiException(ErrorCode.VALIDATION_ERROR, "Данные для обновления профиля не могут быть пустыми");
         }
 
-        User user = getUserOrThrow(id);
+        User targetUser = getUserOrThrow(id);
+
+        if (request.role() != null && request.role() != Role.ADMIN) {
+            ensureNotLastActiveAdmin(targetUser);
+            if (currentAdmin != null && targetUser.getId().equals(currentAdmin.getId())) {
+                throw new ApiException(
+                        ErrorCode.SELF_ACTION_FORBIDDEN,
+                        "Вы не можете изменить собственную роль администратора"
+                );
+            }
+        }
 
         if (request.firstName() != null) {
-            user.setFirstName(validatePersonName(request.firstName(), "Имя"));
+            targetUser.setFirstName(validatePersonName(request.firstName(), "Имя"));
         }
         if (request.lastName() != null) {
-            user.setLastName(validatePersonName(request.lastName(), "Фамилия"));
+            targetUser.setLastName(validatePersonName(request.lastName(), "Фамилия"));
         }
         if (request.firstName() != null || request.lastName() != null) {
-            String last = user.getLastName() != null ? user.getLastName() : "";
-            String first = user.getFirstName() != null ? user.getFirstName() : "";
+            String last = targetUser.getLastName() != null ? targetUser.getLastName() : "";
+            String first = targetUser.getFirstName() != null ? targetUser.getFirstName() : "";
             String combined = (last + " " + first).trim();
             if (!combined.isEmpty()) {
-                user.setFullName(combined);
+                targetUser.setFullName(combined);
             }
         }
 
         if (request.role() != null) {
-            user.setRole(request.role());
+            targetUser.setRole(request.role());
         }
 
         if (request.regionId() != null) {
             String regionId = request.regionId().trim();
             Region region = regionRepository.findById(regionId)
                     .orElseThrow(() -> new ApiException(ErrorCode.VALIDATION_ERROR, "Указанный регион не найден в справочнике"));
-            user.setRegion(region);
+            targetUser.setRegion(region);
         }
 
         if (request.departmentId() != null) {
             Department department = departmentRepository.findById(request.departmentId())
                     .orElseThrow(() -> new ApiException(ErrorCode.VALIDATION_ERROR, "Указанное следственное управление не найдено в справочнике"));
-            user.setDepartment(department);
+            targetUser.setDepartment(department);
         }
 
         if (request.positionId() != null) {
             Position position = positionRepository.findById(request.positionId())
                     .orElseThrow(() -> new ApiException(ErrorCode.VALIDATION_ERROR, "Указанная должность не найдена в справочнике"));
-            user.setPosition(position);
+            targetUser.setPosition(position);
         }
 
-        User saved = userRepository.save(user);
+        User saved = userRepository.save(targetUser);
         return toAdminUserResponse(saved);
     }
 
     @Transactional
     public AdminUserResponse blockUser(Long id, User currentAdmin) {
-        User user = getUserOrThrow(id);
-        if (currentAdmin != null && user.getId().equals(currentAdmin.getId())) {
-            throw new ApiException(ErrorCode.VALIDATION_ERROR, "Нельзя заблокировать собственную учётную запись");
+        User targetUser = getUserOrThrow(id);
+        if (currentAdmin != null && targetUser.getId().equals(currentAdmin.getId())) {
+            throw new ApiException(
+                    ErrorCode.SELF_ACTION_FORBIDDEN,
+                    "Вы не можете заблокировать собственную учетную запись"
+            );
         }
-        user.setStatus(UserStatus.BLOCKED);
-        User saved = userRepository.save(user);
+        ensureNotLastActiveAdmin(targetUser);
+        targetUser.setStatus(UserStatus.BLOCKED);
+        User saved = userRepository.save(targetUser);
         return toAdminUserResponse(saved);
     }
 
@@ -196,6 +217,17 @@ public class AdminUserService {
         user.setFailedLoginAttempts(0);
         User saved = userRepository.save(user);
         return toAdminUserResponse(saved);
+    }
+
+    private void ensureNotLastActiveAdmin(User targetUser) {
+        if (targetUser.getRole() == Role.ADMIN
+                && targetUser.getStatus() == UserStatus.ACTIVE
+                && userRepository.countByRoleAndStatus(Role.ADMIN, UserStatus.ACTIVE) <= 1) {
+            throw new ApiException(
+                    ErrorCode.LAST_ADMIN_PROTECTION,
+                    "Невозможно заблокировать или понизить роль единственного активного администратора в системе"
+            );
+        }
     }
 
     private User getUserOrThrow(Long id) {
