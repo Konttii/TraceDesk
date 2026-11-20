@@ -33,6 +33,10 @@ public class Ticket {
     @JoinColumn(name = "assignee_id")
     private User assignee;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "region_id")
+    private Region region;
+
     @Column(name = "attachment_key")
     private String attachmentKey;
 
@@ -131,6 +135,14 @@ public class Ticket {
 
     public void setAssignee(User assignee) {
         this.assignee = assignee;
+    }
+
+    public Region getRegion() {
+        return region;
+    }
+
+    public void setRegion(Region region) {
+        this.region = region;
     }
 
     public String getAttachmentKey() {

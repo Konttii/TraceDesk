@@ -16,18 +16,24 @@ public interface TicketRepository extends JpaRepository<Ticket, Long> {
     Long getNextTicketSequenceValue();
 
     @Override
-    @EntityGraph(attributePaths = {"author", "assignee"})
+    @EntityGraph(attributePaths = {"author", "assignee", "region"})
     Page<Ticket> findAll(Pageable pageable);
 
-    @EntityGraph(attributePaths = {"author", "assignee"})
+    @EntityGraph(attributePaths = {"author", "assignee", "region"})
     Page<Ticket> findByStatus(TicketStatus status, Pageable pageable);
 
-    @EntityGraph(attributePaths = {"author", "assignee"})
+    @EntityGraph(attributePaths = {"author", "assignee", "region"})
+    Page<Ticket> findByRegionId(String regionId, Pageable pageable);
+
+    @EntityGraph(attributePaths = {"author", "assignee", "region"})
+    Page<Ticket> findByRegionIdAndStatus(String regionId, TicketStatus status, Pageable pageable);
+
+    @EntityGraph(attributePaths = {"author", "assignee", "region"})
     Page<Ticket> findByAuthorId(Long authorId, Pageable pageable);
 
-    @EntityGraph(attributePaths = {"author", "assignee"})
+    @EntityGraph(attributePaths = {"author", "assignee", "region"})
     Page<Ticket> findByAuthorIdAndStatus(Long authorId, TicketStatus status, Pageable pageable);
 
-    @EntityGraph(attributePaths = {"author", "assignee"})
+    @EntityGraph(attributePaths = {"author", "assignee", "region"})
     Optional<Ticket> findWithDetailsById(Long id);
 }

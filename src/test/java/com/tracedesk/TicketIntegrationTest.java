@@ -1,8 +1,13 @@
 package com.tracedesk;
 
 import com.tracedesk.domain.entity.Ticket;
+import com.tracedesk.domain.entity.User;
+import com.tracedesk.domain.enums.Role;
 import com.tracedesk.domain.enums.TicketStatus;
+import com.tracedesk.domain.enums.UserStatus;
+import com.tracedesk.repository.RegionRepository;
 import com.tracedesk.repository.TicketRepository;
+import com.tracedesk.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -11,6 +16,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
@@ -50,9 +56,19 @@ class TicketIntegrationTest {
     @Autowired
     private TicketRepository ticketRepository;
 
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private RegionRepository regionRepository;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
     @BeforeEach
     void cleanTickets() {
         ticketRepository.deleteAll();
+        userRepository.findByIin("930303300099").ifPresent(userRepository::delete);
     }
 
     @Test
@@ -79,13 +95,15 @@ class TicketIntegrationTest {
 
         Long ticketId = extractId(createResult.getResponse().getContentAsString());
 
-        // 2. Олег находит обращение с фильтром OPEN
+        // 2. Олег находит обращение с фильтром OPEN (с региональной привязкой 01 — г. Астана)
         mockMvc.perform(get("/tickets")
                         .param("status", "OPEN")
                         .with(httpBasic("oleg", "password")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content[0].id").value(ticketId))
-                .andExpect(jsonPath("$.content[0].title").value("Не скачивается PDF"));
+                .andExpect(jsonPath("$.content[0].title").value("Не скачивается PDF"))
+                .andExpect(jsonPath("$.content[0].regionId").value("01"))
+                .andExpect(jsonPath("$.content[0].regionName").value("г. Астана"));
 
         // 3. Олег берёт обращение в работу
         mockMvc.perform(post("/tickets/{id}/assign", ticketId)
@@ -108,11 +126,13 @@ class TicketIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("CLOSED"));
 
-        // 6. Ирина открывает карточку и видит CLOSED, ответ и 3 записи истории (OPEN -> IN_PROGRESS -> CLOSED)
+        // 6. Ирина открывает карточку и видит CLOSED, регион 01, ответ и 3 записи истории (OPEN -> IN_PROGRESS -> CLOSED)
         mockMvc.perform(get("/tickets/{id}", ticketId)
                         .with(httpBasic("irina", "password")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("CLOSED"))
+                .andExpect(jsonPath("$.regionId").value("01"))
+                .andExpect(jsonPath("$.regionName").value("г. Астана"))
                 .andExpect(jsonPath("$.replies.length()").value(1))
                 .andExpect(jsonPath("$.replies[0].message").value("Проверьте доступ к материалам дела"))
                 .andExpect(jsonPath("$.history.length()").value(3))
@@ -202,52 +222,124 @@ class TicketIntegrationTest {
     }
 
     @Test
-    @DisplayName("Проверка конкурентности: Два оператора одновременно берут одно OPEN-обращение, один получает 200, второй — 409")
+    @DisplayName("Проверка конкурентности: Два оператора одного региона одновременно берут одно OPEN-обращение, один получает 200, второй — 409")
     void concurrentAssignRaceConditionTest() throws Exception {
-        MvcResult createResult = mockMvc.perform(multipart("/tickets")
-                        .param("title", "Гонка операторов")
-                        .param("description", "Проверка оптимистической блокировки")
-                        .with(httpBasic("irina", "password")))
+        User astanaSupport2 = new User(
+                "930303300099",
+                "Тестов Оператор Астаны",
+                passwordEncoder.encode("password"),
+                Role.SUPPORT
+        );
+        astanaSupport2.setIin("930303300099");
+        astanaSupport2.setEmail("astana.support2@tracedesk.kz");
+        astanaSupport2.setFirstName("Оператор");
+        astanaSupport2.setLastName("Тестов");
+        astanaSupport2.setStatus(UserStatus.ACTIVE);
+        astanaSupport2.setRegion(regionRepository.findById("01").orElseThrow());
+        userRepository.save(astanaSupport2);
+
+        try {
+            MvcResult createResult = mockMvc.perform(multipart("/tickets")
+                            .param("title", "Гонка операторов")
+                            .param("description", "Проверка оптимистической блокировки")
+                            .with(httpBasic("irina", "password")))
+                    .andExpect(status().isCreated())
+                    .andReturn();
+
+            Long ticketId = extractId(createResult.getResponse().getContentAsString());
+
+            ExecutorService executor = Executors.newFixedThreadPool(2);
+            CountDownLatch readyLatch = new CountDownLatch(2);
+            CountDownLatch startLatch = new CountDownLatch(1);
+
+            Callable<Integer> olegTask = () -> {
+                readyLatch.countDown();
+                startLatch.await();
+                return mockMvc.perform(post("/tickets/{id}/assign", ticketId)
+                                .with(httpBasic("oleg", "password")))
+                        .andReturn().getResponse().getStatus();
+            };
+
+            Callable<Integer> secondSupportTask = () -> {
+                readyLatch.countDown();
+                startLatch.await();
+                return mockMvc.perform(post("/tickets/{id}/assign", ticketId)
+                                .with(httpBasic("930303300099", "password")))
+                        .andReturn().getResponse().getStatus();
+            };
+
+            List<Future<Integer>> futures = new ArrayList<>();
+            futures.add(executor.submit(olegTask));
+            futures.add(executor.submit(secondSupportTask));
+
+            readyLatch.await(5, TimeUnit.SECONDS);
+            startLatch.countDown(); // Одновременный старт двух потоков!
+
+            int status1 = futures.get(0).get(10, TimeUnit.SECONDS);
+            int status2 = futures.get(1).get(10, TimeUnit.SECONDS);
+            executor.shutdown();
+
+            assertThat(List.of(status1, status2)).containsExactlyInAnyOrder(200, 409);
+
+            Ticket updated = ticketRepository.findById(ticketId).orElseThrow();
+            assertThat(updated.getStatus()).isEqualTo(TicketStatus.IN_PROGRESS);
+        } finally {
+            ticketRepository.deleteAll();
+            userRepository.findByIin("930303300099").ifPresent(userRepository::delete);
+        }
+    }
+
+    @Test
+    @DisplayName("Изоляция регионов: оператор SUPPORT из региона '01' не видит и не может взять в работу тикет из региона '04'")
+    void supportFromRegion01CannotSeeOrAssignTicketFromRegion04Test() throws Exception {
+        MockMultipartFile file = new MockMultipartFile("file", "error.png", "image/png", SYNTHETIC_PNG);
+
+        // Павел (регион 04 — Актюбинская область) создаёт обращение по ИИН
+        MvcResult aktobeResult = mockMvc.perform(multipart("/tickets")
+                        .file(file)
+                        .param("title", "Тикет региона 04")
+                        .param("description", "Проблема у следователя из Актюбинской области")
+                        .with(httpBasic("940202300002", "password")))
                 .andExpect(status().isCreated())
                 .andReturn();
 
-        Long ticketId = extractId(createResult.getResponse().getContentAsString());
+        Long aktobeTicketId = extractId(aktobeResult.getResponse().getContentAsString());
 
-        ExecutorService executor = Executors.newFixedThreadPool(2);
-        CountDownLatch readyLatch = new CountDownLatch(2);
-        CountDownLatch startLatch = new CountDownLatch(1);
+        // Оператор Олег из региона 01 (930303300003) НЕ видит тикет региона 04 в общем списке
+        mockMvc.perform(get("/tickets")
+                        .with(httpBasic("930303300003", "password")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalElements").value(0));
 
-        Callable<Integer> olegTask = () -> {
-            readyLatch.countDown();
-            startLatch.await();
-            return mockMvc.perform(post("/tickets/{id}/assign", ticketId)
-                            .with(httpBasic("oleg", "password")))
-                    .andReturn().getResponse().getStatus();
-        };
+        // Олег (01) получает 403 при попытке открыть карточку, взять в работу или скачать вложение тикета региона 04
+        mockMvc.perform(get("/tickets/{id}", aktobeTicketId)
+                        .with(httpBasic("930303300003", "password")))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code").value("ACCESS_DENIED"));
 
-        Callable<Integer> annaTask = () -> {
-            readyLatch.countDown();
-            startLatch.await();
-            return mockMvc.perform(post("/tickets/{id}/assign", ticketId)
-                            .with(httpBasic("anna", "password")))
-                    .andReturn().getResponse().getStatus();
-        };
+        mockMvc.perform(post("/tickets/{id}/assign", aktobeTicketId)
+                        .with(httpBasic("930303300003", "password")))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code").value("ACCESS_DENIED"));
 
-        List<Future<Integer>> futures = new ArrayList<>();
-        futures.add(executor.submit(olegTask));
-        futures.add(executor.submit(annaTask));
+        mockMvc.perform(get("/tickets/{id}/attachment", aktobeTicketId)
+                        .with(httpBasic("930303300003", "password")))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code").value("ACCESS_DENIED"));
 
-        readyLatch.await(5, TimeUnit.SECONDS);
-        startLatch.countDown(); // Одновременный старт двух потоков!
+        // Оператор Анна из региона 04 (960404400004) видит тикет и успешно берёт его в работу
+        mockMvc.perform(get("/tickets")
+                        .with(httpBasic("960404400004", "password")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalElements").value(1))
+                .andExpect(jsonPath("$.content[0].id").value(aktobeTicketId))
+                .andExpect(jsonPath("$.content[0].regionId").value("04"));
 
-        int status1 = futures.get(0).get(10, TimeUnit.SECONDS);
-        int status2 = futures.get(1).get(10, TimeUnit.SECONDS);
-        executor.shutdown();
-
-        assertThat(List.of(status1, status2)).containsExactlyInAnyOrder(200, 409);
-
-        Ticket updated = ticketRepository.findById(ticketId).orElseThrow();
-        assertThat(updated.getStatus()).isEqualTo(TicketStatus.IN_PROGRESS);
+        mockMvc.perform(post("/tickets/{id}/assign", aktobeTicketId)
+                        .with(httpBasic("960404400004", "password")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("IN_PROGRESS"))
+                .andExpect(jsonPath("$.assigneeUsername").value("anna"));
     }
 
     private Long extractId(String json) {

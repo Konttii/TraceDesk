@@ -9,6 +9,8 @@ public record TicketSummaryResponse(
         String ticketNumber,
         String title,
         TicketStatus status,
+        String regionId,
+        String regionName,
         String authorUsername,
         String authorFullName,
         String assigneeUsername,

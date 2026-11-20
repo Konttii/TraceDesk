@@ -66,19 +66,20 @@ public class TicketController {
 
     @Operation(
             summary = "3.2 / 3.4 Список доступных обращений с фильтрацией и пагинацией",
-            description = "Оператор SUPPORT видит все обращения. Следователь INVESTIGATOR видит только свои обращения."
+            description = "Оператор SUPPORT видит обращения только своего региона. Следователь INVESTIGATOR видит только свои обращения. Администратор ADMIN видит все обращения с фильтрацией по regionId."
     )
     @GetMapping
     public ResponseEntity<Page<TicketSummaryResponse>> listTickets(
             @AuthenticationPrincipal AppUserPrincipal principal,
             @Parameter(description = "Фильтр по статусу (OPEN, IN_PROGRESS, CLOSED)") @RequestParam(value = "status", required = false) TicketStatus status,
+            @Parameter(description = "Фильтр по коду региона ('01'..'20', доступно для ADMIN)") @RequestParam(value = "regionId", required = false) String regionId,
             @Parameter(description = "Номер страницы (начиная с 0)") @RequestParam(value = "page", defaultValue = "0") int page,
             @Parameter(description = "Размер страницы (1..100)") @RequestParam(value = "size", defaultValue = "10") int size
     ) {
         int safePage = Math.max(page, 0);
         int safeSize = Math.min(Math.max(size, 1), 100);
         Pageable pageable = PageRequest.of(safePage, safeSize, Sort.by(Sort.Direction.DESC, "createdAt"));
-        return ResponseEntity.ok(ticketService.listTickets(principal.getUser(), status, pageable));
+        return ResponseEntity.ok(ticketService.listTickets(principal.getUser(), status, regionId, pageable));
     }
 
     @Operation(

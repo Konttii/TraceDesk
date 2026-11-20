@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Код подтверждения TraceDesk</title>
+</head>
+<body style="margin:0;padding:24px;background-color:#f4f6f9;font-family:Arial,sans-serif;color:#1e293b;">
+<div style="max-width:520px;margin:0 auto;background:#ffffff;border-radius:12px;padding:32px;border:1px solid #e2e8f0;">
+    <h2 style="margin-top:0;color:#0f172a;">Подтверждение электронной почты</h2>
+    <p>Здравствуйте, <strong th:text="${firstName}">Пользователь</strong>!</p>
+    <p>Для завершения подачи заявки на регистрацию в системе <strong>TraceDesk</strong> введите 6-значный код подтверждения:</p>
+    <div style="margin:24px 0;padding:18px;background:#f8fafc;border:1px dashed #3b82f6;border-radius:8px;text-align:center;">
+        <span style="font-size:32px;font-weight:bold;letter-spacing:8px;color:#1d4ed8;" th:text="${otpCode}">000000</span>
+    </div>
+    <p style="font-size:14px;color:#64748b;">
+        Срок действия кода — <span th:text="${ttlMinutes != null ? ttlMinutes : 10}">10</span> минут.
+        Никому не сообщайте данный код.
+    </p>
+</div>
+</body>
+</html>

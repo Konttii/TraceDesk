@@ -10,6 +10,8 @@ public record TicketDetailsResponse(
         String title,
         String description,
         TicketStatus status,
+        String regionId,
+        String regionName,
         String authorUsername,
         String authorFullName,
         String assigneeUsername,

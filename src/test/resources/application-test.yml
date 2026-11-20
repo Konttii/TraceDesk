@@ -9,6 +9,27 @@ spring:
     properties:
       hibernate:
         default_schema: tracedesk_test
+  mail:
+    host: localhost
+    port: 1025
+    username: ""
+    password: ""
+    properties:
+      mail:
+        smtp:
+          auth: false
+          starttls:
+            enable: false
+            required: false
 
 minio:
   bucket: tracedesk-attachments-test
+
+app:
+  mail:
+    from: noreply@tracedesk.test
+    sender-name: TraceDesk Test
+  rabbitmq:
+    email-exchange: tracedesk.email.exchange.test
+    email-queue: tracedesk.email.queue.test
+    email-routing-key: tracedesk.email.routing-key.test
