@@ -2768,7 +2768,7 @@
 
             if (!res.ok) {
                 if (res.status === 423 || data.code === 'ACCOUNT_LOCKED') {
-                    showBoxAlert('loginAlert', 'error', `<b>Вход заблокирован на 1 час:</b> ${escapeHtml(data.message || 'Превышено количество неверных попыток пароля')}`);
+                    showBoxAlert('loginAlert', 'error', `<b>Вход временно заблокирован:</b> ${escapeHtml(data.message || 'Превышено количество неверных попыток пароля')}`);
                 } else if (data.code === 'ACCOUNT_PENDING_APPROVAL') {
                     showBoxAlert('loginAlert', 'warning', `<b>Заявка на рассмотрении:</b> ${escapeHtml(data.message || 'Ваша заявка еще находится на рассмотрении у администратора')}`);
                 } else if (data.code === 'ACCOUNT_BLOCKED') {

@@ -3,6 +3,7 @@ package com.tracedesk.config;
 import com.tracedesk.domain.entity.User;
 import com.tracedesk.domain.enums.UserStatus;
 import com.tracedesk.repository.UserRepository;
+import com.tracedesk.service.LoginAttemptService;
 import com.tracedesk.web.exception.ErrorCode;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -41,7 +42,16 @@ public class SecurityConfig {
             Throwable cause = authException != null ? authException.getCause() : null;
             if (authException instanceof LockedException || cause instanceof LockedException) {
                 errorCode = ErrorCode.ACCOUNT_LOCKED;
-                message = "Аккаунт временно заблокирован на 1 час из-за 3 неверных попыток ввода пароля";
+                User user = resolveUserFromBasicAuth(request, userRepository);
+                boolean isShortLock = user != null
+                        && user.getFailedLoginAttempts() == LoginAttemptService.INITIAL_LOCK_ATTEMPTS
+                        && user.getLockedUntil() != null
+                        && !user.getLockedUntil().isAfter(
+                                OffsetDateTime.now().plusMinutes(LoginAttemptService.SHORT_LOCK_DURATION_MINUTES).plusSeconds(5)
+                        );
+                message = isShortLock
+                        ? "Аккаунт временно заблокирован на 5 минут из-за 3 неверных попыток ввода пароля"
+                        : "Аккаунт временно заблокирован на 1 час из-за превышения количества неверных попыток ввода пароля";
             } else if (authException instanceof DisabledException || cause instanceof DisabledException) {
                 User user = resolveUserFromBasicAuth(request, userRepository);
                 if (user != null && user.getStatus() == UserStatus.PENDING_APPROVAL) {

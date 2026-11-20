@@ -136,7 +136,7 @@ class AuthAndLockoutIntegrationTest {
     }
 
     @Test
-    @DisplayName("Защита от Brute-Force: 3 неверных пароля блокируют вход на 1 час (ACCOUNT_LOCKED), а успешный вход сбрасывает счётчики")
+    @DisplayName("Прогрессивная защита от Brute-Force: 3 ошибки -> бан 5 мин, затем 2 попытки -> бан 1 час (и далее каждые 2 ошибки -> 1 час), успех сбрасывает счётчики")
     void bruteForceLockoutAndResetTest() throws Exception {
         createTestUser(UserStatus.ACTIVE);
 
@@ -154,26 +154,64 @@ class AuthAndLockoutIntegrationTest {
                 .andExpect(status().isOk());
         assertThat(userRepository.findByIin(TEST_USER_IIN).orElseThrow().getFailedLoginAttempts()).isZero();
 
-        // 2. Три неудачные попытки подряд -> lockedUntil = now + 1h, failedLoginAttempts = 0
+        // 2. Три неудачные попытки подряд -> lockedUntil = now + 5m, failedLoginAttempts = 3
         for (int i = 1; i <= 3; i++) {
             mockMvc.perform(get("/auth/me").with(httpBasic(TEST_USER_IIN, "WrongPass" + i)))
                     .andExpect(status().isUnauthorized());
         }
 
-        User lockedUser = userRepository.findByIin(TEST_USER_IIN).orElseThrow();
-        assertThat(lockedUser.getFailedLoginAttempts()).isZero();
-        assertThat(lockedUser.getLockedUntil()).isNotNull();
-        assertThat(lockedUser.getLockedUntil()).isAfter(OffsetDateTime.now().plusMinutes(55));
+        User shortLockedUser = userRepository.findByIin(TEST_USER_IIN).orElseThrow();
+        assertThat(shortLockedUser.getFailedLoginAttempts()).isEqualTo(3);
+        assertThat(shortLockedUser.getLockedUntil()).isNotNull();
+        assertThat(shortLockedUser.getLockedUntil()).isAfter(OffsetDateTime.now().plusMinutes(4));
+        assertThat(shortLockedUser.getLockedUntil()).isBeforeOrEqualTo(OffsetDateTime.now().plusMinutes(5).plusSeconds(5));
 
-        // 3. Попытка входа даже с ПРАВИЛЬНЫМ паролем во время блокировки возвращает 423 ACCOUNT_LOCKED
+        // 3. Попытка входа даже с ПРАВИЛЬНЫМ паролем во время 5-минутной блокировки возвращает 423 ACCOUNT_LOCKED
         mockMvc.perform(get("/auth/me").with(httpBasic(TEST_USER_IIN, TEST_USER_PASSWORD)))
                 .andExpect(status().isLocked())
                 .andExpect(jsonPath("$.code").value("ACCOUNT_LOCKED"))
-                .andExpect(jsonPath("$.message").value("Аккаунт временно заблокирован на 1 час из-за 3 неверных попыток ввода пароля"));
+                .andExpect(jsonPath("$.message").value("Аккаунт временно заблокирован на 5 минут из-за 3 неверных попыток ввода пароля"));
 
-        // 4. Имитируем истечение 1 часа блокировки -> вход разрешён и lockedUntil сбрасывается в null
-        lockedUser.setLockedUntil(OffsetDateTime.now().minusMinutes(1));
-        userRepository.save(lockedUser);
+        // 4. Имитируем истечение 5 минут -> даются 2 попытки; 1-я ошибка ещё не блокирует
+        shortLockedUser.setLockedUntil(OffsetDateTime.now().minusSeconds(1));
+        userRepository.save(shortLockedUser);
+
+        mockMvc.perform(get("/auth/me").with(httpBasic(TEST_USER_IIN, "WrongPass4")))
+                .andExpect(status().isUnauthorized());
+        User afterFourthFail = userRepository.findByIin(TEST_USER_IIN).orElseThrow();
+        assertThat(afterFourthFail.getFailedLoginAttempts()).isEqualTo(4);
+        assertThat(afterFourthFail.getLockedUntil()).isNull();
+
+        // 5. 2-я ошибка после 5-минутного бана (всего 5-я) -> блокировка на 1 час
+        mockMvc.perform(get("/auth/me").with(httpBasic(TEST_USER_IIN, "WrongPass5")))
+                .andExpect(status().isUnauthorized());
+        User hourLockedUser = userRepository.findByIin(TEST_USER_IIN).orElseThrow();
+        assertThat(hourLockedUser.getFailedLoginAttempts()).isEqualTo(5);
+        assertThat(hourLockedUser.getLockedUntil()).isNotNull();
+        assertThat(hourLockedUser.getLockedUntil()).isAfter(OffsetDateTime.now().plusMinutes(55));
+
+        mockMvc.perform(get("/auth/me").with(httpBasic(TEST_USER_IIN, TEST_USER_PASSWORD)))
+                .andExpect(status().isLocked())
+                .andExpect(jsonPath("$.code").value("ACCOUNT_LOCKED"))
+                .andExpect(jsonPath("$.message").value("Аккаунт временно заблокирован на 1 час из-за превышения количества неверных попыток ввода пароля"));
+
+        // 6. Имитируем истечение 1 часа -> снова 2 попытки -> 2 ошибки снова блокируют на 1 час
+        hourLockedUser.setLockedUntil(OffsetDateTime.now().minusSeconds(1));
+        userRepository.save(hourLockedUser);
+
+        mockMvc.perform(get("/auth/me").with(httpBasic(TEST_USER_IIN, "WrongPass6")))
+                .andExpect(status().isUnauthorized());
+        assertThat(userRepository.findByIin(TEST_USER_IIN).orElseThrow().getLockedUntil()).isNull();
+
+        mockMvc.perform(get("/auth/me").with(httpBasic(TEST_USER_IIN, "WrongPass7")))
+                .andExpect(status().isUnauthorized());
+        User secondHourLockedUser = userRepository.findByIin(TEST_USER_IIN).orElseThrow();
+        assertThat(secondHourLockedUser.getFailedLoginAttempts()).isEqualTo(7);
+        assertThat(secondHourLockedUser.getLockedUntil()).isAfter(OffsetDateTime.now().plusMinutes(55));
+
+        // 7. После истечения блокировки успешный вход разрешён и сбрасывает счётчики
+        secondHourLockedUser.setLockedUntil(OffsetDateTime.now().minusMinutes(1));
+        userRepository.save(secondHourLockedUser);
 
         mockMvc.perform(get("/auth/me").with(httpBasic(TEST_USER_IIN, TEST_USER_PASSWORD)))
                 .andExpect(status().isOk())

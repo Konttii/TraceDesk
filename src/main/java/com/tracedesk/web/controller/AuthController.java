@@ -36,7 +36,7 @@ public class AuthController {
             @ApiResponse(responseCode = "200", description = "Полный профиль авторизованного пользователя"),
             @ApiResponse(responseCode = "401", description = "Неверный ИИН или пароль (UNAUTHORIZED)"),
             @ApiResponse(responseCode = "403", description = "Заявка на рассмотрении (ACCOUNT_PENDING_APPROVAL) или доступ заблокирован (ACCOUNT_BLOCKED)"),
-            @ApiResponse(responseCode = "423", description = "Аккаунт временно заблокирован на 1 час из-за 3 неверных попыток ввода пароля (ACCOUNT_LOCKED)")
+            @ApiResponse(responseCode = "423", description = "Аккаунт временно заблокирован (на 5 мин после 3 ошибок, далее на 1 час после каждых 2 ошибок) (ACCOUNT_LOCKED)")
     })
     @GetMapping("/me")
     public ResponseEntity<UserProfileResponse> getCurrentUser(@AuthenticationPrincipal AppUserPrincipal principal) {

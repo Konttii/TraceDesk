@@ -16,8 +16,10 @@ import java.util.Optional;
 @Service
 public class LoginAttemptService {
 
-    public static final int MAX_FAILED_ATTEMPTS = 3;
-    public static final long LOCK_DURATION_HOURS = 1;
+    public static final int INITIAL_LOCK_ATTEMPTS = 3;
+    public static final int SUBSEQUENT_LOCK_ATTEMPTS = 2;
+    public static final long SHORT_LOCK_DURATION_MINUTES = 5;
+    public static final long LONG_LOCK_DURATION_HOURS = 1;
 
     private final UserRepository userRepository;
 
@@ -33,12 +35,15 @@ public class LoginAttemptService {
                 user.setLockedUntil(null);
             }
             int attempts = user.getFailedLoginAttempts() + 1;
-            if (attempts >= MAX_FAILED_ATTEMPTS) {
-                user.setLockedUntil(OffsetDateTime.now().plusHours(LOCK_DURATION_HOURS));
-                user.setFailedLoginAttempts(0);
-            } else {
-                user.setFailedLoginAttempts(attempts);
+            user.setFailedLoginAttempts(attempts);
+
+            if (attempts == INITIAL_LOCK_ATTEMPTS) {
+                user.setLockedUntil(OffsetDateTime.now().plusMinutes(SHORT_LOCK_DURATION_MINUTES));
+            } else if (attempts > INITIAL_LOCK_ATTEMPTS
+                    && (attempts - INITIAL_LOCK_ATTEMPTS) % SUBSEQUENT_LOCK_ATTEMPTS == 0) {
+                user.setLockedUntil(OffsetDateTime.now().plusHours(LONG_LOCK_DURATION_HOURS));
             }
+
             userRepository.save(user);
         });
     }

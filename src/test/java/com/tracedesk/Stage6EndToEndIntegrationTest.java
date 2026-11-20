@@ -264,7 +264,7 @@ class Stage6EndToEndIntegrationTest {
                 .andExpect(jsonPath("$.status").value("ACTIVE"))
                 .andExpect(jsonPath("$.region.id").value("04"));
 
-        // 5. 3 неверных пароля блокируют вход на 1 час -> 423 ACCOUNT_LOCKED
+        // 5. 3 неверных пароля блокируют вход на 5 минут -> 423 ACCOUNT_LOCKED
         for (int attempt = 1; attempt <= 3; attempt++) {
             mockMvc.perform(get("/auth/me")
                             .with(httpBasic(IIN_CANDIDATE_1, "WrongPassword" + attempt)))
@@ -273,7 +273,8 @@ class Stage6EndToEndIntegrationTest {
 
         User lockedUser = userRepository.findByIin(IIN_CANDIDATE_1).orElseThrow();
         assertThat(lockedUser.getLockedUntil()).isNotNull();
-        assertThat(lockedUser.getLockedUntil()).isAfter(OffsetDateTime.now().plusMinutes(55));
+        assertThat(lockedUser.getLockedUntil()).isAfter(OffsetDateTime.now().plusMinutes(4));
+        assertThat(lockedUser.getLockedUntil()).isBeforeOrEqualTo(OffsetDateTime.now().plusMinutes(5).plusSeconds(5));
 
         mockMvc.perform(get("/auth/me")
                         .with(httpBasic(IIN_CANDIDATE_1, STRONG_PASSWORD)))
